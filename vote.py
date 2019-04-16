@@ -1,6 +1,6 @@
 try:
     import requests
-except Exception ImportError:
+except ImportError:
     print('requests is not installed installing it!')
     import os
     os.system('python -m pip install requests')
