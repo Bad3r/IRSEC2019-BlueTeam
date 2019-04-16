@@ -45,3 +45,7 @@
     - create a template
 
 ## OS's And Services:
+Hostname | Services | OS | IP
+------------ | ------------- | ------------ | -------------
+Troy | AD/DNS | Windows Server | 10.2.X.1
+Gebriella | Mail | Fedora | 10.2.X.2
