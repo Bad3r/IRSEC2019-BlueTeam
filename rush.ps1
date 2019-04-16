@@ -72,6 +72,11 @@ function stop_process{
 	}
 }
 
+function process_poker{
+	Write-Verbose -Message "Dumping current processes"
+	Get-Service | Out-File "services.txt"
+}
+
 function change_users{
 	$Accounts =  Get-WmiObject -Class Win32_UserAccount -filter "LocalAccount = True"
 	$ListUsers = @()
@@ -79,12 +84,8 @@ function change_users{
 	$Accounts = $Accounts -split ' '
 	ForEach($account in $Accounts){
 		$stringAccount = [string]$account -split '"'
-		for($i = 0; $i -lt $stringAccount.Count; $i+=1){
-			if ($i -eq 3){
-				$user = $stringAccount[$i]
-				$ListUsers += $user
-			}
-		 }
+        $user = $stringAccount[3]
+        $ListUsers += $user
 	}
 	#Disable-LocalUser -Name $username
 	$Password = (ConvertTo-SecureString -AsPlainText "TenToesDownForLife$10!" -Force)
@@ -146,9 +147,12 @@ function app_lock{
 function install_packages{	
 	$currentuser = $env:USERNAME
 	choco feature enable -n=allowGlobalConfirmation
+	# remove prompt
+	choco install sysinternals
 	choco install firefox
 	#Get-ChildItem -Path x 
-	choco install sysinternals
+	#choco install splunk-universalforwarder
+
 	#choco install notepadplusplus
 	choco install processhacker
 }
@@ -165,18 +169,14 @@ function fruit_user{
 }
 
 function read_history{
-    $Accounts =  Get-WmiObject -Class Win32_UserAccount -filter "LocalAccount = True"
+   $Accounts =  Get-WmiObject -Class Win32_UserAccount -filter "LocalAccount = True"
 	$ListUsers = @()
 	$currentuser = $env:USERNAME
 	$Accounts = $Accounts -split ' '
 	ForEach($account in $Accounts){
 		$stringAccount = [string]$account -split '"'
-		for($i = 0; $i -lt $stringAccount.Count; $i+=1){
-			if ($i -eq 3){
-				$user = $stringAccount[$i]
-				$ListUsers += $user
-			}
-		 }
+        $user = $stringAccount[3]
+        $ListUsers += $user
 	}
 	$orig_path = C:\Users\x\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt
 	ForEach($user in $ListUsers){
@@ -198,12 +198,13 @@ function read_history{
 function stop_scripts{
 	Try{
 		$path = "HKLM:\SOFTWARE\Microsoft\Windows Script Host\"
-		New-ItemProperty -Path $path -Name "Enabled" -Value 0
+		New-ItemProperty -Path $path -Name "Enabled" -Value 0 -PropertyType "DWord"
 	}
 	Catch{
 		Try{
-			# if name already exists just set the value from 1 to 0
 			Set-ItemProperty -Path $path -Name "Enabled" -Value 0
+			# if name already exists just set the value from 1 to 0
+
 		}
 		Catch{
 			Write-Verbose -Message "Could not change registry value for Windows Script Host do it manually here! $($path)"
