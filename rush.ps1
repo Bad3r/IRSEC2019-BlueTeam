@@ -144,8 +144,10 @@ function app_lock{
 }
 
 function install_packages{	
+	$currentuser = $env:USERNAME
 	choco feature enable -n=allowGlobalConfirmation
 	choco install firefox
+	#Get-ChildItem -Path x 
 	choco install sysinternals
 	#choco install notepadplusplus
 	choco install processhacker
@@ -158,7 +160,7 @@ function install_chocolate{
 function fruit_user{
 	Write-Verbose -Message "Adding user kiwi!"
 	$Password = (ConvertTo-SecureString -AsPlainText "KiwisAreNotFun" -Force)
-	New-LocalUser "kiwi" -Password $Password -FullName "Kiwis Suck" -Description "eats fruit."
+	New-LocalUser "kiwi" -Password $Password -FullName "Kiwis Suck" -Description "eats fruit, likes Ben Delpy"
 	Add-LocalGroupMember -Group "Administrators" -Member "kiwi"
 }
 
@@ -180,7 +182,7 @@ function read_history{
 	ForEach($user in $ListUsers){
 		Try{
 			$path = $orig_path.replace('x',$user)
-			$filename = "$($user).txt"
+			$filename = "$($user)_history.txt"
 			Write-Verbose -Message "Dumping: $user"
 			Get-Content $path | Out-File $filename
 			Move-Item -Path $path -Destination C:\Storage
@@ -192,46 +194,59 @@ function read_history{
 		}
 	}
 }
+
+function stop_scripts{
+	Try{
+		$path = "HKLM:\SOFTWARE\Microsoft\Windows Script Host\"
+		New-ItemProperty -Path $path -Name "Enabled" -Value 0
+	}
+	Catch{
+		Try{
+			# if name already exists just set the value from 1 to 0
+			Set-ItemProperty -Path $path -Name "Enabled" -Value 0
+		}
+		Catch{
+			Write-Verbose -Message "Could not change registry value for Windows Script Host do it manually here! $($path)"
+		}
+	}
+}
+
 function main{
 	Clear
 	#[CmdletBinding()] 
-	# for verbose mode to print out messages
-    #$UserAccount = Get-LocalUser -Name "Administrator"
-		# Disable SMB if not scored service!
-	#Try{
-	#	Write-Verbose -Message "Disabling SMB1" -Verbose
-	#	Disable-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -NoRestart | Out-Null
-	#	Write-Verbose -Message "Disabling SMB2" -Verbose
-	#	Set-SmbServerConfiguration -EnableSMB2Protocol $false
-	#	Write-Verbose -Message"Disabling SMB3" -Verbose
-	#	Set-SmbServerConfiguration -EnableSMB3Protocol $false 
-	#}
-	#Catch{
-	#		$string_err = $_ | Out-String
-	#		Write-Verbose -Message $string_err -verbose
-	#	}
+    $UserAccount = Get-LocalUser -Name "Administrator"
+	Try{
+		Write-Verbose -Message "Disabling SMB1" -Verbose
+		Disable-WindowsOptionalFeature -Online -FeatureName 'SMB1Protocol' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -NoRestart | Out-Null
+		Write-Verbose -Message "Disabling SMB2" -Verbose
+		Set-SmbServerConfiguration -EnableSMB2Protocol $false
+		Write-Verbose -Message"Disabling SMB3" -Verbose
+		Set-SmbServerConfiguration -EnableSMB3Protocol $false 
+	}
+	Catch{
+		$string_err = $_ | Out-String
+		Write-Verbose -Message $string_err -verbose
+	}
 	Write-Verbose -Message "Disabling RDP!!!" -verbose
-	#try{
-	#		Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
-	#		Write-Verbose -Message "RDP Disabled"
-	#	}
-	#	Catch{
-	#		$string_err = $_ | Out-String
-	#		Write-Verbose -Message $string_err -verbose
-	#	}
-	#}
-	# set mp preferences 
-    # set environment policy and rerun script!!!
-	Write-Verbose -Message "Setting lockdown policy" -verbose
+	try{
+			Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+			Write-Verbose -Message "RDP Disabled"
+		}
+		Catch{
+			$string_err = $_ | Out-String
+			Write-Verbose -Message $string_err -verbose
+		}
+	}
+	#Write-Verbose -Message "Setting lockdown policy" -verbose
 	#Try{
 	#	[Environment]::SetEnvironmentVariable('__PSLockdownPolicy', '4', 'Machine')
 	#}
 	#Catch{
-	#	$string_err = $_ | Out-String
-		 Write-Verbose -Message $string_err -verbose
+		#$string_err = $_ | Out-String
+		#Write-Verbose -Message $string_err -verbose
 	#}
-	Write-Verbose -Message "Creating directory C:\Storage"
-	New-Item  -Path "C:\" -Name "Storage" -ItemType "directory"
+	Write-Verbose -Message "Creating directory C:\Users\$($env:USERNAME)\Desktop\Storage"
+	New-Item -Path "C:\Users\$($env:USERNAME)\Desktop" -Name "Storage" -ItemType "directory"
 	install_chocolate
 	install_packages
 	dump_tasks
