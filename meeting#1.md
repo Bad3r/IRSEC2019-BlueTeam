@@ -1,7 +1,7 @@
 # Meeting #1:
 'Everyone has a plan… Until they get hit in the mouth — Mike Tyson'
 
-### Practice and Preparation:
+## Practice and Preparation:
 
 - read the blueteam packet carefully
 - watch the presentations:
@@ -34,7 +34,8 @@
     - patch too much
 
   -
-### scoring:
+## scoring:
+
   - 40% uptime
   - 40% injects
     - most amount of point for the least amount of effort
@@ -42,3 +43,9 @@
   - 20% IR
     - create a throwaway Google account(shared)
     - create a template
+
+## OS's And Services:
+Hostname | Services | OS | IP
+------------ | ------------- | ------------ | -------------
+Troy | AD/DNS | Windows Server | 10.2.X.1
+Gebriella | Mail | Fedora | 10.2.X.2
