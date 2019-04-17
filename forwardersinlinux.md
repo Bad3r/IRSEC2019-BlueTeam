@@ -16,7 +16,7 @@
 	splunk enable listen <port> -auth <username>:<password>
 
 	(easier to manage using web interface than attempting w CLI for reading the actual logs)
- 
+
 **Deploying a heavy forwarder using web interface:**
 
 1. Log into Splunk Web as admin on the instance that will be forwarding data. 
