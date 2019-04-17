@@ -19,19 +19,19 @@
  
 **Deploying a heavy forwarder using web interface:**
 
-1. Log into Splunk Web as admin on the instance that will be forwarding data.
-2. Click the Settings > Forwarding and receiving.
-3. Click Add new at Configure forwarding.
-4. Enter the hostname or IP address for the receiving Splunk instance(s), along with the receiving port specified when the receiver was configured. For example, you might enter: receivingserver.com:9997. To implement load-balanced forwarding, you can enter multiple hosts as a comma-separated list.
+1. Log into Splunk Web as admin on the instance that will be forwarding data. 
+2. Click the Settings > Forwarding and receiving. 
+3. Click Add new at Configure forwarding. 
+4. Enter the hostname or IP address for the receiving Splunk instance(s), along with the receiving port specified when the receiver was configured. For example, you might enter: receivingserver.com:9997. To implement load-balanced forwarding, you can enter multiple hosts as a comma-separated list. 
 5. Click Save.
 
 
 **Configuring a heavy forwarder using web interface:**
 
-1. Log into Splunk Web as admin on the instance that will be forwarding data.
-2. Click the Settings > Forwarding and receiving.
-3. Select Forwarding defaults.
-4. Select Yes to store and maintain a local copy of the indexed data on the forwarder.
+1. Log into Splunk Web as admin on the instance that will be forwarding data. 
+2. Click the Settings > Forwarding and receiving. 
+3. Select Forwarding defaults. 
+4. Select Yes to store and maintain a local copy of the indexed data on the forwarder. 
 All other configuration must be done in outputs.conf.
 
 
