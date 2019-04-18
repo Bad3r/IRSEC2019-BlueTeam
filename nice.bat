@@ -1,6 +1,6 @@
 ::
 ::#######################################################################
-::
+:: Inspired and a tad modified from https://gist.github.com/jaredhaight/e88b4323adce06395dace501841d3075
 :: Change file associations to protect against common ransomware attacks
 :: Note that if you legitimately use these extensions, like .bat, you will now need to execute them manually from cmd or powershell
 :: Alternatively, you can right-click on them and hit 'Run as Administrator' but ensure it's a script you want to run :) 
