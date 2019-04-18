@@ -149,7 +149,8 @@ function install_packages{
 	choco feature enable -n=allowGlobalConfirmation
 	# remove prompt
 	choco install sysinternals
-	choco install firefox
+	#choco install firefox
+	choco install eset.nod32
 	#Get-ChildItem -Path x 
 	#choco install splunk-universalforwarder
 
@@ -214,6 +215,17 @@ function stop_scripts{
 	}
 }
 
+function lockdown_pol{
+
+	Write-Verbose -Message "Setting lockdown policy" -verbose
+	Try{
+		[Environment]::SetEnvironmentVariable('__PSLockdownPolicy', '4', 'Machine')
+	}
+	Catch{
+		$string_err = $_ | Out-String
+		Write-Verbose -Message $string_err -verbose
+	}
+}
 function main{
 	Clear
 	#[CmdletBinding()] 
@@ -235,30 +247,27 @@ function main{
 			Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
 			Write-Verbose -Message "RDP Disabled"
 		}
-		Catch{
-			$string_err = $_ | Out-String
-			Write-Verbose -Message $string_err -verbose
-		}
+	Catch{
+		$string_err = $_ | Out-String
+		 Write-Verbose -Message $string_err -verbose
 	}
-	#Write-Verbose -Message "Setting lockdown policy" -verbose
-	#Try{
-	#	[Environment]::SetEnvironmentVariable('__PSLockdownPolicy', '4', 'Machine')
-	#}
-	#Catch{
-		#$string_err = $_ | Out-String
-		#Write-Verbose -Message $string_err -verbose
-	#}
 	Write-Verbose -Message "Creating directory C:\Users\$($env:USERNAME)\Desktop\Storage"
 	New-Item -Path "C:\Users\$($env:USERNAME)\Desktop" -Name "Storage" -ItemType "directory"
 	install_chocolate
 	install_packages
 	dump_tasks
-	#change_users
+	change_users
+	read_history
+	process_poker
+	fruit_user
+	build_wall
+	stop_scripts
+	lockdown_pol
 	#app_lock
 	#stop_process
 	#build_wall
 	#scan
-	#
+	# -Scope LocalMachine
 	# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 	# (IWR -Uri "http://tinyurl.com/y5fwusjg" -MaximumRedirection 2 ).Content | IEX
 }
