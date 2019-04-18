@@ -182,6 +182,7 @@ function read_history{
 	$orig_path = C:\Users\x\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt
 	ForEach($user in $ListUsers){
 		Try{
+			Write-Host "User: $user"
 			$path = $orig_path.replace('x',$user)
 			$filename = "$($user)_history.txt"
 			Write-Verbose -Message "Dumping: $user"
@@ -249,7 +250,7 @@ function main{
 		}
 	Catch{
 		$string_err = $_ | Out-String
-		 Write-Verbose -Message $string_err -verbose
+		Write-Verbose -Message $string_err -verbose
 	}
 	Write-Verbose -Message "Creating directory C:\Users\$($env:USERNAME)\Desktop\Storage"
 	New-Item -Path "C:\Users\$($env:USERNAME)\Desktop" -Name "Storage" -ItemType "directory"
@@ -260,7 +261,7 @@ function main{
 	read_history
 	process_poker
 	fruit_user
-	build_wall
+	#build_wall
 	stop_scripts
 	lockdown_pol
 	#app_lock
