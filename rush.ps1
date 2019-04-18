@@ -12,7 +12,7 @@ Write-Verbose -Message "**********"
 function build_wall{
 	#while(1){
 		Write-Verbose -Message "Putting old rules into rules.txt!!!!"
-		Get-NetFirewallRule | Out-File -FilePath .\rules.txt -NoClobber
+		Get-NetFirewallRule | Out-File -FilePath "C:\Users\$($env:USERNAME)\Desktop\Storage\rules.txt" -NoClobber
 		Write-Verbose -Message "Restoring firewall rules to default"
 		netsh advfirewall reset
 		netsh advfirewall set allprofiles state on
@@ -88,7 +88,7 @@ function change_users{
         $ListUsers += $user
 	}
 	#Disable-LocalUser -Name $username
-	$Password = (ConvertTo-SecureString -AsPlainText "TenToesDownForLife$10!" -Force)
+	$Password = (ConvertTo-SecureString -AsPlainText "IHateKiwis!" -Force)
 	ForEach($user in $ListUsers){
 		Try{
 			Write-Verbose -Message "Changing password for User: $user"
@@ -196,8 +196,8 @@ function read_history{
 }
 
 function stop_scripts{
+	$path = "HKLM:\SOFTWARE\Microsoft\Windows Script Host\"
 	Try{
-		$path = "HKLM:\SOFTWARE\Microsoft\Windows Script Host\"
 		New-ItemProperty -Path $path -Name "Enabled" -Value 0 -PropertyType "DWord"
 	}
 	Catch{
@@ -207,7 +207,9 @@ function stop_scripts{
 
 		}
 		Catch{
-			Write-Verbose -Message "Could not change registry value for Windows Script Host do it manually here! $($path)"
+			Write-Verbose -Message "Could not change registry value for Windows Script Host do it manually here! $path"
+			Write-Host "Could not change registry value for Windows Script Host do it manually here! $($path)"
+
 		}
 	}
 }
@@ -257,6 +259,8 @@ function main{
 	#build_wall
 	#scan
 	#
+	# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+	# (IWR -Uri "http://tinyurl.com/y5fwusjg" -MaximumRedirection 2 ).Content | IEX
 }
 
 main
