@@ -44,7 +44,7 @@ function build_wall{
 		}
 		
 	Write-Verbose -Message "Configuring logs."
-	netsh advfirewall set currentprofile logging filename "C:\Users\$(env:USERNAME)\Desktop\Storage\firewall.log"
+	netsh advfirewall set currentprofile logging filename "C:\Users\$($env:USERNAME)\Desktop\Storage\firewall.log"
 	netsh advfirewall set currentprofile logging maxfilesize 4096
 	netsh advfirewall set currentprofile logging droppedconnections enable
 	netsh advfirewall set currentprofile logging allowedconnections enable
@@ -116,20 +116,20 @@ function scan{
 	Set-MpPreference -MAPSReporting Advanced
     Set-MpPreference -SubmitSamplesConsent Always
 	Set-MpPreference -ScanParameters 2 -ScanScheduleDay 0 -ScanScheduleQuickScanTime 1 -UnknownThreatDefaultAction "Quarantine" -SevereThreatDefaultAction "Quarantine" -HighThreatDefaultAction "Quarantine" -LowThreatDefaultAction "Quarantine" -ModerateThreatDefaultAction "Quarantine" -CheckForSignaturesBeforeRunningScan 1 -DisableRealtimeMonitoring 0
-	IWR(-Uri "https://raw.githubusercontent.com/Bad3r/IRSEC2019-BlueTeam/master/policy.xml?token=AIVA5C4WFLR4QBWEJSB5OUC4YIU66").Content | Out-File policy.xml
+	(IWR -Uri "https://raw.githubusercontent.com/Bad3r/IRSEC2019-BlueTeam/master/policy.xml?token=AIVA5C4WFLR4QBWEJSB5OUC4YIU66" -UseBasicParsing).Content | Out-File policy.xml
 	New-CIPolicy -Level FilePublisher -FilePath policy.xml  -ScanPath C:\ -UserPEs -Fallback Hash
 	Try{
 		Start-MpScan -ThrottleLimit 0 -ScanType 1
 		#Write-Verbose -Message "Sleeping for 30 seconds then running full scan!"
 		#Start-Sleep 30
-		Start-MpScan -ThrottleLimit 0 -ScanType 2
+		#Start-MpScan -ThrottleLimit 0 -ScanType 2
 	}
 	Catch{
 		Try{
 			C:\"Program Files"\"Windows Defender"\MpCmdRun.exe -Scan -ScanType 1
 			#Write-Verbose -Message "Sleeping for 60 seconds then running full scan!"
 			#Start-Sleep 30
-			C:\"Program Files"\"Windows Defender"\MpCmdRun.exe -Scan -ScanType 2
+			#C:\"Program Files"\"Windows Defender"\MpCmdRun.exe -Scan -ScanType 2
 		 }
 		 Catch{
 			$string_err = $_ | Out-String
@@ -141,27 +141,30 @@ function scan{
 function dump_tasks{
 	$cur = $env:USERNAME
 	Write-Verbose "Putting scheduledtasks into tasks.txt"
-	tasklist | Out-File "C:\Users\$cur\Storage\tasks.txt"
+	tasklist | Out-File "C:\Users\$($cur)\Desktop\Storage\tasks.txt"
 	Write-Verbose "Putting scheduledtask information into tasksinfo.txt"
-	Get-ScheduledTask | ? state -eq running | Get-ScheduledTaskInfo | Out-File "C:\Users\$cur\Storage\running_scheduled_tasks.txt"
+	Get-ScheduledTask | ? state -eq running | Get-ScheduledTaskInfo | Out-File "C:\Users\$($cur)\Storage\running_scheduled_tasks.txt"
 }
 
 function app_lock{
-	sc config "AppIDSvc" start=auto; net start "AppIDSvc"
-	(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml").Content | Out-File first.xml
-	(IWR -Uri "https://github.com/MotiBa/AppLocker/blob/master/Policies/AppLocker-Block-Publishers.xml").Content | Out-File second.xml
+	sc config "AppIDSvc" start=auto
+	Start-Service -Name "AppIDSvc"
+	(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml" -UseBasicParsing).Content | Out-File first.xml
+	(IWR -Uri "https://github.com/MotiBa/AppLocker/blob/master/Policies/AppLocker-Block-Publishers.xml" -UseBasicParsing).Content | Out-File second.xml
 	$deny = '<AppLockerPolicy Version="1"><RuleCollection Type="Exe, DLL, Script" EnforcementMode="NotConfigured">
 	<FilePathRule Id="31B2F340-016D-11D2-945F-00C04FB984F9" Name="%SYSTEM32%\*" Description="" 10 UserOrGroupSid="S-1-5-21-3165297888-301567370-576410423-13" 
 	Action="Deny"><Conditions><FilePathCondition Path="%SYSTEM32%\*" /></Conditions></FilePathRule></RuleCollection> 
 	</AppLockerPolicy>'
-	$allow = '<AppLockerPolicy Version="1"><RuleCollection Type="Exe, DLL, Script" EnforcementMode="NotConfigured">
+	
+	
+	echo '<AppLockerPolicy Version="1"><RuleCollection Type="Exe, DLL, Script" EnforcementMode="NotConfigured">
 	<FilePathRule Id="31B2F340-016D-11D2-945F-00C04FB984F9" Name="%SYSTEM32%\*" Description="" 10 UserOrGroupSid="S-1-5-21-3165297888-301567370-576410423-13" 
 	Action="Allow"><Conditions><FilePathCondition Path="%SYSTEM32%\*" /></Conditions></FilePathRule></RuleCollection> 
-	</AppLockerPolicy>'
-	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User Everyone -Optimize -XML $deny | Out-File "hi1.xml"
-	Set-AppLockerPolicy -XMLPolicy hi1.xml
-	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User "$($env:USERNAME), Kiwi" -Optimize -XML $allow | Out-File "hi2.xml"
+	</AppLockerPolicy>' | Out-File deny.xml
+	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User Everyone -Optimize -XML deny.xml | Out-File "hi1.xml"
+	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User "$($env:USERNAME), Kiwi" -Optimize -XML allow.xml | Out-File "hi2.xml"
 	Try{
+		Set-AppLockerPolicy -XMLPolicy hi1.xml
 		Set-AppLockerPolicy -XMLPolicy hi2.xml
 		Set-AppLockerPolicy -XMLPolicy first.xml
 		Set-AppLockerPolicy -XMLPolicy second.xml
@@ -221,11 +224,11 @@ function read_history{
 	ForEach($user in $ListUsers){
 		Try{
 			Write-Host "User: $user"
-			$path = $orig_path.replace('x',$user)
+			$path = $orig_path.replace('x',[string]$user)
 			$filename = "$($user)_history.txt"
 			Write-Verbose -Message "Dumping: $user"
 			Get-Content $path | Out-File $filename
-			Move-Item -Path $path -Destination C:\Storage
+			Move-Item -Path $path -Destination "C:\$($env:USERNAME)\Desktop\Storage"
 			}
 		Catch{
 			$string_err = $_ | Out-String
@@ -311,13 +314,13 @@ function harden{
 	reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v RunAsPPL /t REG_DWORD /d 00000001 /f
 	reg add "HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" /v UseLogonCredential /t REG_DWORD /d 0 /f
 	$systemroot = "C:\Windows"
-	Netsh.exe advfirewall firewall add rule name="Block Notepad.exe netconns" program="$systemroot\system32\notepad.exe" protocol=tcp dir=out enable=yes action=block profile=any
-	Netsh.exe advfirewall firewall add rule name="Block regsvr32.exe netconns" program="$systemroot\system32\regsvr32.exe" protocol=tcp dir=out enable=yes action=block profile=any
-	Netsh.exe advfirewall firewall add rule name="Block calc.exe netconns" program="$systemroot\system32\calc.exe" protocol=tcp dir=out enable=yes action=block profile=any
-	Netsh.exe advfirewall firewall add rule name="Block mshta.exe netconns" program="$systemroot\system32\mshta.exe" protocol=tcp dir=out enable=yes action=block profile=any
-	Netsh.exe advfirewall firewall add rule name="Block wscript.exe netconns" program="$systemroot\system32\wscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
-	Netsh.exe advfirewall firewall add rule name="Block cscript.exe netconns" program="$systemroot\system32\cscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
-	Netsh.exe advfirewall firewall add rule name="Block runscripthelper.exe netconns" program="$systemroot\system32\runscripthelper.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	netsh advfirewall firewall add rule name="Block Notepad.exe netconns" program="$($systemroot)\system32\notepad.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	netsh advfirewall firewall add rule name="Block regsvr32.exe netconns" program="$($systemroot)\system32\regsvr32.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	netsh advfirewall firewall add rule name="Block calc.exe netconns" program="$($systemroot)\system32\calc.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	netsh advfirewall firewall add rule name="Block mshta.exe netconns" program="$($systemroot)\system32\mshta.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="$($systemroot)\system32\wscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	netsh advfirewall firewall add rule name="Block cscript.exe netconns" program="$($systemroot)\system32\cscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	netsh advfirewall firewall add rule name="Block runscripthelper.exe netconns" program="$($systemroot)\system32\runscripthelper.exe" protocol=tcp dir=out enable=yes action=block profile=any
 }
 
 
@@ -330,9 +333,9 @@ function main{
 	#[CmdletBinding()] 
 	Write-Verbose -Message "Creating directory C:\Users\$($env:USERNAME)\Desktop\Storage"
 	New-Item -Path "C:\Users\$($env:USERNAME)\Desktop" -Name "Storage" -ItemType "directory"
-	remove_junk
-	install_chocolate
-	install_packages
+	#remove_junk
+	#install_chocolate
+	#install_packages
 	dump_tasks
 	change_users
 	read_history
@@ -344,6 +347,7 @@ function main{
 	harden
 	scan
 	lockdown_pol
+	
 }
 
 main
