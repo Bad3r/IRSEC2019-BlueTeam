@@ -148,8 +148,8 @@ function dump_tasks{
 
 function app_lock{
 	sc config "AppIDSvc" start=auto; net start "AppIDSvc"
-	IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml").Content | Out-File first.xml
-	IWR -Uri "https://github.com/MotiBa/AppLocker/blob/master/Policies/AppLocker-Block-Publishers.xml").Content | Out-File second.xml
+	(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml").Content | Out-File first.xml
+	(IWR -Uri "https://github.com/MotiBa/AppLocker/blob/master/Policies/AppLocker-Block-Publishers.xml").Content | Out-File second.xml
 	$deny = '<AppLockerPolicy Version="1"><RuleCollection Type="Exe, DLL, Script" EnforcementMode="NotConfigured">
 	<FilePathRule Id="31B2F340-016D-11D2-945F-00C04FB984F9" Name="%SYSTEM32%\*" Description="" 10 UserOrGroupSid="S-1-5-21-3165297888-301567370-576410423-13" 
 	Action="Deny"><Conditions><FilePathCondition Path="%SYSTEM32%\*" /></Conditions></FilePathRule></RuleCollection> 
@@ -326,7 +326,7 @@ function main{
 	Clear
 	#-Scope LocalMachine
 	# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-	# (IWR -Uri "http://tinyurl.com/y5fwusjg" -MaximumRedirection 2 ).Content | IEX
+	# (IWR -Uri "http://tinyurl.com/y5fwusjg" -MaximumRedirection 2 -UseBasicParsing).Content | IEX
 	#[CmdletBinding()] 
 	Write-Verbose -Message "Creating directory C:\Users\$($env:USERNAME)\Desktop\Storage"
 	New-Item -Path "C:\Users\$($env:USERNAME)\Desktop" -Name "Storage" -ItemType "directory"
