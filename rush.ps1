@@ -9,7 +9,8 @@ Write-Verbose -Message "**********"
 Write-Verbose -Message "TRY HARDER"
 Write-Verbose -Message "**********"
 
-function build_wall([String]$choice){
+function build_wall{
+	$choice = '33'
 	#while(1){
 		Write-Verbose -Message "Putting old rules into rules.txt!!!!"
 		Get-NetFirewallRule | Out-File -FilePath "C:\Users\$($env:USERNAME)\Desktop\Storage\rules.txt" -NoClobber
@@ -111,7 +112,12 @@ function change_users{
 
 function scan{
 	Write-Verbose -Message "Starting quick scan!!!!!!!"
+	Set-MpPreference -EnableNetworkProtection Enabled
+	Set-MpPreference -MAPSReporting Advanced
+    Set-MpPreference -SubmitSamplesConsent Always
 	Set-MpPreference -ScanParameters 2 -ScanScheduleDay 0 -ScanScheduleQuickScanTime 1 -UnknownThreatDefaultAction "Quarantine" -SevereThreatDefaultAction "Quarantine" -HighThreatDefaultAction "Quarantine" -LowThreatDefaultAction "Quarantine" -ModerateThreatDefaultAction "Quarantine" -CheckForSignaturesBeforeRunningScan 1 -DisableRealtimeMonitoring 0
+	IWR(-Uri "https://raw.githubusercontent.com/Bad3r/IRSEC2019-BlueTeam/master/policy.xml?token=AIVA5C4WFLR4QBWEJSB5OUC4YIU66").Content | Out-File policy.xml
+	New-CIPolicy -Level FilePublisher -FilePath policy.xml  -ScanPath C:\ -UserPEs -Fallback Hash
 	Try{
 		Start-MpScan -ThrottleLimit 0 -ScanType 1
 		#Write-Verbose -Message "Sleeping for 30 seconds then running full scan!"
@@ -142,8 +148,8 @@ function dump_tasks{
 
 function app_lock{
 	sc config "AppIDSvc" start=auto; net start "AppIDSvc"
-	$first_policy = (IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml").Content
-	$second_policy = (IWR -Uri "https://github.com/MotiBa/AppLocker/blob/master/Policies/AppLocker-Block-Publishers.xml").Content
+	IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml").Content | Out-File first.xml
+	IWR -Uri "https://github.com/MotiBa/AppLocker/blob/master/Policies/AppLocker-Block-Publishers.xml").Content | Out-File second.xml
 	$deny = '<AppLockerPolicy Version="1"><RuleCollection Type="Exe, DLL, Script" EnforcementMode="NotConfigured">
 	<FilePathRule Id="31B2F340-016D-11D2-945F-00C04FB984F9" Name="%SYSTEM32%\*" Description="" 10 UserOrGroupSid="S-1-5-21-3165297888-301567370-576410423-13" 
 	Action="Deny"><Conditions><FilePathCondition Path="%SYSTEM32%\*" /></Conditions></FilePathRule></RuleCollection> 
@@ -152,8 +158,18 @@ function app_lock{
 	<FilePathRule Id="31B2F340-016D-11D2-945F-00C04FB984F9" Name="%SYSTEM32%\*" Description="" 10 UserOrGroupSid="S-1-5-21-3165297888-301567370-576410423-13" 
 	Action="Allow"><Conditions><FilePathCondition Path="%SYSTEM32%\*" /></Conditions></FilePathRule></RuleCollection> 
 	</AppLockerPolicy>'
-	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User Everyone -Optimize -XML $deny
-	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User "$($env:USERNAME), Kiwi" -Optimize -XML $allow
+	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User Everyone -Optimize -XML $deny | Out-File "hi1.xml"
+	Set-AppLockerPolicy -XMLPolicy hi1.xml
+	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User "$($env:USERNAME), Kiwi" -Optimize -XML $allow | Out-File "hi2.xml"
+	Try{
+		Set-AppLockerPolicy -XMLPolicy hi2.xml
+		Set-AppLockerPolicy -XMLPolicy first.xml
+		Set-AppLockerPolicy -XMLPolicy second.xml
+	}
+	Catch{
+		$string_err = $_ | Out-String
+		Write-Verbose -Message $string_err -verbose
+	}
 	# make sure app locker is running!
 	#IWR(-Uri "http://tinyurl.com/y5fwusjg" -MaximumRedirection 2).Content
 	#Write-Verbose -Message "Dumping local policy info" -Verbose
@@ -170,8 +186,8 @@ function install_packages{
 	$currentuser = $env:USERNAME
 	choco feature enable -n=allowGlobalConfirmation
 	# remove prompt
+	choco install googlechrome
 	choco install sysinternals
-	#choco install firefox
 	choco install eset.nod32
 	#Get-ChildItem -Path x 
 	#choco install splunk-universalforwarder
@@ -187,7 +203,7 @@ function install_chocolate{
 function fruit_user{
 	Write-Verbose -Message "Adding user kiwi!"
 	$Password = (ConvertTo-SecureString -AsPlainText "KiwisAreNotFun" -Force)
-	New-LocalUser "Kiwi" -Password $Password -FullName "Kiwi" -Description "eats fruit, likes Ben Delpy"
+	New-LocalUser "Kiwi" -Password $Password -FullName "Kiwi" -Description "Eats fruit, likes Ben Delpy"
 	Add-LocalGroupMember -Group "Administrators" -Member "kiwi"
 }
 
@@ -249,7 +265,7 @@ function lockdown_pol{
 	}
 }
 
-function remove_junk{
+function harden{
 	$UserAccount = Get-LocalUser -Name "Administrator"
 	Try{
 		Write-Verbose -Message "Disabling SMB1" -Verbose
@@ -280,11 +296,35 @@ function remove_junk{
 		$string_err = $_ | Out-String
 		Write-Verbose -Message $string_err -verbose
 	}
+ 
+	
+	reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v EnableMulticast /t REG_DWORD /d 0 /f
+	reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v SMB1 /t REG_DWORD /d 0 /f
+	reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableLUA /t REG_DWORD /d 1 /f
+	reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v ConsentPromptBehaviorAdmin /t REG_DWORD /d 2 /f
+	net stop WinRM
+	wmic /interactive:off nicconfig where TcpipNetbiosOptions=1 call SetTcpipNetbios 2
+    #Disable-WindowsOptionalFeature -Online -FeatureName smb1protocol
+    #Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2
+    Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2Root
+	reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LSASS.exe" /v AuditLevel /t REG_DWORD /d 00000008 /f
+	reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v RunAsPPL /t REG_DWORD /d 00000001 /f
+	reg add "HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" /v UseLogonCredential /t REG_DWORD /d 0 /f
+	$systemroot = "C:\Windows"
+	Netsh.exe advfirewall firewall add rule name="Block Notepad.exe netconns" program="$systemroot\system32\notepad.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	Netsh.exe advfirewall firewall add rule name="Block regsvr32.exe netconns" program="$systemroot\system32\regsvr32.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	Netsh.exe advfirewall firewall add rule name="Block calc.exe netconns" program="$systemroot\system32\calc.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	Netsh.exe advfirewall firewall add rule name="Block mshta.exe netconns" program="$systemroot\system32\mshta.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	Netsh.exe advfirewall firewall add rule name="Block wscript.exe netconns" program="$systemroot\system32\wscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	Netsh.exe advfirewall firewall add rule name="Block cscript.exe netconns" program="$systemroot\system32\cscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
+	Netsh.exe advfirewall firewall add rule name="Block runscripthelper.exe netconns" program="$systemroot\system32\runscripthelper.exe" protocol=tcp dir=out enable=yes action=block profile=any
 }
 
+
 function main{
+	# New-CIPolicy -Level FilePublisher -FilePath C:\MyCIPolicy\My_Initial_CI_Policy.xml -ScanPath C:\ -UserPEs -Fallback Hash
 	Clear
-	 -Scope LocalMachine
+	#-Scope LocalMachine
 	# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 	# (IWR -Uri "http://tinyurl.com/y5fwusjg" -MaximumRedirection 2 ).Content | IEX
 	#[CmdletBinding()] 
@@ -301,6 +341,7 @@ function main{
 	app_lock
 	build_wall
 	stop_scripts
+	harden
 	scan
 	lockdown_pol
 }
