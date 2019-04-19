@@ -1,13 +1,7 @@
 # 
-#	This script does simple things but oh so well :) 
+#   Be the Cobra
 #	@Author: Rebel
 #
-#Set-ExecutionPolicy RemoteSigned
-#./MpCmdRun.exe -Scan -ScanType 2
-#https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-antivirus/command-line-arguments-windows-defender-antivirus
-Write-Verbose -Message "**********"
-Write-Verbose -Message "TRY HARDER"
-Write-Verbose -Message "**********"
 
 function build_wall{
 	$choice = '33'
@@ -128,24 +122,24 @@ function scan{
 	}
 	(IWR -Uri "https://raw.githubusercontent.com/Bad3r/IRSEC2019-BlueTeam/master/policy.xml?token=AIVA5C4WFLR4QBWEJSB5OUC4YIU66" -UseBasicParsing).Content | Out-File policy.xml
 	New-CIPolicy -Level FilePublisher -FilePath policy.xml -OmitPaths "C:\Windows\WinSxs\" -ScanPath C:\ -UserPEs -Fallback Hash
-	#Try{
-	#	Start-MpScan -ThrottleLimit 0 -ScanType 1
-		#Write-Verbose -Message "Sleeping for 30 seconds then running full scan!"
+	Try{
+		Start-MpScan -ThrottleLimit 0 -ScanType 1
+		Write-Verbose -Message "Sleeping for 30 seconds then running full scan!"
 		#Start-Sleep 30
 		#Start-MpScan -ThrottleLimit 0 -ScanType 2
-	#}
-	#Catch{
-	#	Try{
-	#		C:\"Program Files"\"Windows Defender"\MpCmdRun.exe -Scan -ScanType 1
+	}
+	Catch{
+		Try{
+			C:\"Program Files"\"Windows Defender"\MpCmdRun.exe -Scan -ScanType 1
 			#Write-Verbose -Message "Sleeping for 60 seconds then running full scan!"
 			#Start-Sleep 30
 			#C:\"Program Files"\"Windows Defender"\MpCmdRun.exe -Scan -ScanType 2
-	#	 }
-	#	 Catch{
-	#		$string_err = $_ | Out-String
-    #        Write-Verbose -Message $string_err
-	#	 }
-	#}
+		 }
+		 Catch{
+			$string_err = $_ | Out-String
+            Write-Verbose -Message $string_err
+		 }
+	}
 }
 
 function dump_tasks{
@@ -157,28 +151,75 @@ function dump_tasks{
 }
 
 function app_lock{
-	Set-Service -Name "AppIDSvc" -StartupType Automatic
-	Try{
-		Start-Service -Name "AppIDSvc"
+	#Set-Service -Name "AppIDSvc" -StartupType Automatic
+	#Try{
+	#	Start-Service -Name "AppIDSvc"
 		#make sure to start the service or all will be in vein
+	#}
+	#Catch{
+		#Get-ChildItem C:\Windows\System32\*.exe | Get-AppLockerFileInformation | New-AppLockerPolicy -RuleType Publisher, Hash -User "$($env:USERNAME)" -Optimize -ServiceEnforcement Enabled -XML  | Out-File allow.xml
+
+	#}
+	$local = @" 
+	<AppLockerPolicy Version="1">
+	<RuleCollection Type="Exe" EnforcementMode="NotConfigured" />
+	<RuleCollection Type="Msi" EnforcementMode="NotConfigured" />
+	<RuleCollection Type="Script" EnforcementMode="NotConfigured" />
+	<RuleCollection Type="Dll" EnforcementMode="NotConfigured" />
+	<RuleCollection Type="Appx" EnforcementMode="NotConfigured" />
+	</AppLockerPolicy>
+"@
+	
+	try{
+		$local | Out-File local.xml
+		import-module AppLocker
+		Set-AppLockerPolicy -XMLPolicy local.xml
+
 	}
 	Catch{
-	
+		Write-Verbose -Message "Could not configure local policy do manually"
+		Write-Verbose -Message "SKIP IF BUSY https://oddvar.moe/2018/09/28/applocker-making-sure-that-local-rules-are-removed/"
 	}
 	Try{
 		(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml" -UseBasicParsing).Content | Out-File first.xml
 		(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Publishers.xml" -UseBasicParsing).Content | Out-File second.xml
-		Get-ChildItem C:\Windows\System32\*.exe | Get-AppLockerFileInformation | New-AppLockerPolicy -RuleType Path -User Everyone -Optimize -ServiceEnforcement Enabled -XML | Out-File deny.xml
-		Get-ChildItem C:\Windows\System32\*.exe | Get-AppLockerFileInformation | New-AppLockerPolicy -RuleType Path -User "$($env:USERNAME), Kiwi" -Optimize -ServiceEnforcement Enabled -XML  | Out-File allow.xml
-		#Add Kiwi
+		#Get-ChildItem C:\Windows\System32\*.exe | Get-AppLockerFileInformation | New-AppLockerPolicy -RuleType Publisher, Hash -User Everyone -Optimize -ServiceEnforcement Enabled -XML | Out-File third.xml
+		#Get-ChildItem C:\Windows\System32\*.exe | Get-AppLockerFileInformation | New-AppLockerPolicy -RuleType Publisher, Hash -User Everyone -Optimize -ServiceEnforcement Enabled -XML | Out-File fourth.xml
+		Get-AppLockerFileInformation -Directory C:\Windows\System32 -Recurse -FileType exe, script, dll | New-AppLockerPolicy -RuleType Publisher, Hash -User Everyone -Optimize -ServiceEnforcement Enabled -XML | Out-File third.xml
+		#Get-AppLockerFileInformation -Directory C:\Windows\System32 -Recurse -FileType exe, script, dll | New-AppLockerPolicy -RuleType Publisher, Hash -User Everyone -Optimize -ServiceEnforcement Enabled -XML | Out-File fourth.xml
+		
+		$first = Get-Content first.xml
+		$first = $first.Replace('Action="Allow"','Action="Deny"')
+		$first | Out-File first.xml
+		
+		$second = Get-Content second.xml
+		$second = $second.Replace('Action="Allow"','Action="Deny"')
+		$second | Out-File second.xml
+		
+		$third = Get-Content third.xml
+		$third = $third.Replace('Action="Allow"','Action="Deny"')
+		$third | Out-File third.xml
+		
+		#$fourth = Get-Content fourth.xml
+		#$fourth = $fourth.Replace('Action="Allow"','Action="Deny"')
+		#$fourth | Out-File fourth.xml	
+		
 		Write-Verbose -Message "Setting first.xml\n\n"
 		Set-AppLockerPolicy -XMLPolicy first.xml
 		Write-Verbose -Message "Setting second.xml\n\n"
-		Set-AppLockerPolicy -XMLPolicy second.xml -User Everyone
-		Write-Verbose -Message "Setting deny.xml\n\n"
-		Set-AppLockerPolicy -XMLPolicy deny.xml 
-		Write-Verbose -Message "Setting allow.xml"
-		Set-AppLockerPolicy -XMLPolicy allow.xml 
+		Set-AppLockerPolicy -XMLPolicy second.xml
+		Write-Verbose -Message "Setting third.xml\n\n"
+		Set-AppLockerPolicy -XMLPolicy third.xml 
+		#Write-Verbose -Message "Setting allow.xml"
+		#Set-AppLockerPolicy -XMLPolicy fourth.xml 
+		
+		Get-AppLockerFileInformation -Directory C:\Windows\System32 -Recurse -FileType exe, script, dll | New-AppLockerPolicy -RuleType Publisher, Hash -User $($env:USERNAME) -Optimize -ServiceEnforcement Enabled -XML | Out-File allow_first.xml
+
+		#$fourth = Get-Content allow_first.xml
+		#$fourth = $fourth.Replace('Action="Allow"')
+		#$fourth | Out-File allow_first.xml
+		Write-Verbose -Message "Setting first_allow.xml\n\n"
+		Set-AppLockerPolicy -XMLPolicy first_allow.xml 
 	}
 	Catch{
 		$string_err = $_ | Out-String
@@ -323,9 +364,14 @@ function harden{
 	}
 	$systemroot = "C:\Windows"
 	#FIX FTYPE find equiv for ps ?
-	cmd.exe ftype htafile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
-	cmd.exe ftype WSHFile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
-	cmd.exe ftype batfile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
+	Try{
+		cmd.exe /c 'ftype htafile="$($systemroot)\system32\NOTEPAD.EXE" "%1"'
+		cmd.exe /c  'ftype WSHFile="$($systemroot)\system32\NOTEPAD.EXE" "%1"'
+		cmd.exe /c 'ftype batfile="$($systemroot)\system32\NOTEPAD.EXE" "%1"'
+	}
+	Catch{
+		Write-Verbose -Message "Could not set up ftypes ctrl+f look for ftype copy and paste and do it!"
+	}
 	#General OS hardening
     #Disables DNS multicast, netbios
     #Enables UAC and sets to always notify
@@ -357,14 +403,24 @@ function harden{
 
 
 function main{
-	# New-CIPolicy -Level FilePublisher -FilePath C:\MyCIPolicy\My_Initial_CI_Policy.xml -ScanPath C:\ -UserPEs -Fallback Hash
+	#invoke web request powershell v2
+	#fix applocker
+	#flush scheduled tasks go to windows slides
+	# write function to disable services or just use blackviper
+	# create menu
+	# ask for param
 	Clear
 	#-Scope LocalMachine
 	# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 	# (IWR -Uri "http://tinyurl.com/y5fwusjg" -MaximumRedirection 2 -UseBasicParsing).Content | IEX
 	#[CmdletBinding()] 
-	Write-Verbose -Message "Creating directory C:\Users\$($env:USERNAME)\Desktop\Storage"
-	New-Item -Path "C:\Users\$($env:USERNAME)\Desktop" -Name "Storage" -ItemType "directory"
+	Write-Verbose -Message "**********"
+	Write-Verbose -Message "TRY HARDER"
+	Write-Verbose -Message "**********"
+	#Write-Verbose -Message "Creating directory C:\Users\$($env:USERNAME)\Desktop\Storage"
+	#New-Item -Path "C:\Users\$($env:USERNAME)\Desktop" -Name "Storage" -ItemType "directory"
+	cd ~\Desktop
+	New-Item -Path "~\Desktop" -Name "Storage" -ItemType "directory"
 	change_users
 	harden
 	install_chocolate
@@ -376,12 +432,16 @@ function main{
 	app_lock
 	build_wall
 	stop_scripts
-	scan
 	lockdown_pol
+	scan
 	#positional paramter can not be found for sc start=auto
 	#ftype does not work not recognized just find substitute
 	#malware yes ddoes not work
 	#access denied AppID
+	
+	#dns logging
+	#modify C:\Windows block *.exes from there
+	#check webroots for added files
 }	
 
 main
