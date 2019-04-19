@@ -14,13 +14,13 @@ sudo iptables -P FORWARD DROP
 ##################################
 
 # Change all users passwords
-sudo passwd principal
-sudo passwd chaperone
-sudo passwd deejay
-sudo passwd kid_with_sweatpants
-sudo passwd prom_king
-sudo passwd prom_queen
-sudo passwd dbadmin
+passwd principal
+passwd chaperone
+passwd deejay
+passwd kid_with_sweatpants
+passwd prom_king
+passwd prom_queen
+passwd dbadmin
 
 # Back up names of all user binarys 
 if ! [[ -d ~/backup ]]; then
@@ -28,6 +28,9 @@ if ! [[ -d ~/backup ]]; then
 	ls /usr/bin > ~/backup/usr_bin_backup.txt
 	ls /bin > ~/backup/bin_backup.txt
 fi
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Need to hide all files make a directory that is a space
 
 # Back up cronjobs
 crontab -l > ~/backup/crontab.txt
@@ -44,12 +47,30 @@ cat ~/.bash_logout > ~/backup/logout.txt
 # Back up the default vimrc
 cat ~/.vimrc > ~/backup/vimrc.txt
 
-# Restore iptables
-iptables-restore < ~/backup/iptables.backup
+#Back up your keybinds
+bind -p > ~/backup/mybind
+# To resotre bind use: bind -f mybinds
+
+binds=$(bind -X)
+echo "Redteam binds: $binds" >> ~/backup/REDTEAM_BINDS.txt
+
 
 # chattr the backup dir
 sudo chattr +a -R ~/backup
 
+# Chattr logs
+sudo chattr -R +a /var/log/
+sudo chattr -R -a /var/log/apt/
+sudo chattr -a /var/log/lastlog
+sudo chattr -a /var/log/dpkg.log
+
+# Prevent rootkits
+#sudo env | grep -i 'LD'
+sudo mv /etc/ld.so.preload /etc/ld.so.null
+sudo touch /etc/ld.so.preload && sudo chattr +i /etc/ld.so.preload
+
+# Restore iptables
+iptables-restore < ~/backup/iptables.backup
 
 ##################################
 # Red team can connect           #
@@ -57,8 +78,11 @@ sudo chattr +a -R ~/backup
 
 # reinstall binaries
 sudo apt-get update
-sudo apt-get install -y --reinstall coreutils openssh-server net-tools build-essential libssl-dev procps lsof tmux
-sudo yum reinstall -y coreutils lsof net-tools procps
+# for ubuntu
+#sudo apt-get install -y --reinstall coreutils openssh-server net-tools build-essential libssl-dev procps lsof tmux
+# for fedora/centos
+sudo yum reinstall -y coreutils lsof net-tools procps openssh-server make automake gcc gcc-c++ kernel-devel
+sudo yum update &
 
 # block out red team
 sudo iptables -F 
@@ -78,22 +102,23 @@ echo "trap \"\" EXIT" >> ~/lockout.sh
 echo "trap \"\" RETURN" >> ~/lockout.sh
 echo "PROMPT_COMMAND=\"\"" >> ~/lockout.sh
 # delete all alias
-echo "unalias -a" >> ~/lockout.sh
-#check to see if new binaries have been added
-echo "ls /usr/bin > ~/backup/usr_bin_new.txt" >> ~/lockout.sh
-echo "ls /bin > ~/backup/bin_new.txt" >> ~/lockout.sh
+echo "unalias_duck -a" >> ~/lockout.sh
+# Grab the newest binaries for diffing
+echo "ls_duck /usr/bin > ~/backup/usr_bin_new.txt" >> ~/lockout.sh
+echo "ls_duck /bin > ~/backup/bin_new.txt" >> ~/lockout.sh
 # Clear the bashrc
-echo "echo \"\" > ~/.bashrc" >> ~/lockout.sh
+echo "echo_duck \"\" > ~/.bashrc" >> ~/lockout.sh
 # Clear the bash_logout
-echo "echo \"\" > ~/.bash_logout" >> ~/lockout.sh
+echo "echo_duck \"\" > ~/.bash_logout" >> ~/lockout.sh
 # Clear the bash history
-echo "echo \"\" > ~/.bash_history" >> ~/lockout.sh
+echo "echo_duck \"\" > ~/.bash_history" >> ~/lockout.sh
 # Clear vimrc
-echo "echo \"\" > ~/.vimrc" >> ~/lockout.sh
+echo "echo_duck \"\" > ~/.vimrc" >> ~/lockout.sh
 # clear the cronjobs and reapply my cronjobs
-echo "crontab < /dev/null" >> ~/lockout.sh
-echo "echo \"* * * * * ~/lockout.sh\" > ~/cron.txt" >> ~/lockout.sh
-ehco "crontab ~/cron.txt" >> ~/lockout.sh
+echo "corntab_duck < /dev/null" >> ~/lockout.sh
+echo "echo_duck \"* * * * * ~/lockout.sh\" > ~/cron.txt" >> ~/lockout.sh
+ehco "corntab_duck ~/cron.txt" >> ~/lockout.sh
+
 sudo chmod +x ~/lockout.sh
 
 # apply cron job 
@@ -103,15 +128,23 @@ crontab ~/cron.txt
 # Change the names of all of the binaries
 cd /usr/bin
 for FILENAME in *;do mv $FILENAME $FILENAME_duck;done
-cd /bin
+mv_duck crontab_duck corntab_duck
+mv_duck wget_duck tegw_duck
+mv_duck curl_duck lruc_duck
+mv_duck /sbin/xtables-multi /sbin/lshkl
+
+cd_duck /bin
 for FILENAME in *;do mv $FILENAME $FILENAME_duck;done
-cd
+mv_duck crontab_duck corntab_duck
+mv_duck nc_duck cn_duck
+cd_duck
 
 # Make all of the binaries immutable
 sudo chattr +i -R /usr/bin
 sudo chattr +i -R /bin
 
-# change crontab to corntab
+# Firewall rules
+# use lshkl
 
 # Restore iptables
 iptables-restore < ~/backup/iptables.backup
@@ -140,3 +173,4 @@ iptables-restore < ~/backup/iptables.backup
 #salt the passwords
 
 #prevent red team from looking at most recently viewed files
+#go through all the users and change password
