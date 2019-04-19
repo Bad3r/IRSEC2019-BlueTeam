@@ -81,7 +81,7 @@ function stop_process{
 
 function process_poker{
 	Write-Verbose -Message "Dumping current processes"
-	Get-Service | Out-File "C:\Users\$($env:USERNAME)\Desktop\services.txt"
+	Get-Service | Out-File "C:\Users\$($env:USERNAME)\Desktop\Storage\services.txt"
 }
 
 function change_users{
@@ -128,24 +128,24 @@ function scan{
 	}
 	(IWR -Uri "https://raw.githubusercontent.com/Bad3r/IRSEC2019-BlueTeam/master/policy.xml?token=AIVA5C4WFLR4QBWEJSB5OUC4YIU66" -UseBasicParsing).Content | Out-File policy.xml
 	New-CIPolicy -Level FilePublisher -FilePath policy.xml -OmitPaths "C:\Windows\WinSxs\" -ScanPath C:\ -UserPEs -Fallback Hash
-	Try{
-		Start-MpScan -ThrottleLimit 0 -ScanType 1
+	#Try{
+	#	Start-MpScan -ThrottleLimit 0 -ScanType 1
 		#Write-Verbose -Message "Sleeping for 30 seconds then running full scan!"
 		#Start-Sleep 30
 		#Start-MpScan -ThrottleLimit 0 -ScanType 2
-	}
-	Catch{
-		Try{
-			C:\"Program Files"\"Windows Defender"\MpCmdRun.exe -Scan -ScanType 1
+	#}
+	#Catch{
+	#	Try{
+	#		C:\"Program Files"\"Windows Defender"\MpCmdRun.exe -Scan -ScanType 1
 			#Write-Verbose -Message "Sleeping for 60 seconds then running full scan!"
 			#Start-Sleep 30
 			#C:\"Program Files"\"Windows Defender"\MpCmdRun.exe -Scan -ScanType 2
-		 }
-		 Catch{
-			$string_err = $_ | Out-String
-            Write-Verbose -Message $string_err
-		 }
-	}
+	#	 }
+	#	 Catch{
+	#		$string_err = $_ | Out-String
+    #        Write-Verbose -Message $string_err
+	#	 }
+	#}
 }
 
 function dump_tasks{
@@ -158,8 +158,13 @@ function dump_tasks{
 
 function app_lock{
 	Set-Service -Name "AppIDSvc" -StartupType Automatic
-	Start-Service -Name "AppIDSvc"
-	#make sure to start the service or all will be in vein
+	Try{
+		Start-Service -Name "AppIDSvc"
+		#make sure to start the service or all will be in vein
+	}
+	Catch{
+	
+	}
 	Try{
 		(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml" -UseBasicParsing).Content | Out-File first.xml
 		(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Publishers.xml" -UseBasicParsing).Content | Out-File second.xml
@@ -198,15 +203,15 @@ function install_packages{
 	# remove prompt
 	if([System.IO.File]::Exists($path) -eq $false){
 		#if chrome exists don't waste time installing it again
-		choco install googlechrome
+		choco install googlechrome -ignore-checksum
 	}
-	choco install sysinternals
-	choco install malwarebytes
+	choco install sysinternals -ignore-checksum
+	choco install malwarebytes -ignore-checksum
 	#Get-ChildItem -Path x 
 	#choco install splunk-universalforwarder
 
 	#choco install notepadplusplus
-	choco install processhacker
+	choco install processhacker -ignore-checksum
 }
 
 function install_chocolate{
@@ -230,11 +235,11 @@ function read_history{
         $user = $stringAccount[3]
         $ListUsers += $user
 	}
-	$orig_path = "C:\Users\x\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt"
+	$orig_path = "C:\Users\xxx\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt"
 	ForEach($user in $ListUsers){
 		Try{
 			Write-Host "User: $user"
-			$path = $orig_path.replace('x',[string]$user)
+			$path = $orig_path.replace('xxx',[string]$user)
 			$filename = "$($user)_history.txt"
 			Write-Verbose -Message "Dumping: $user"
 			Get-Content $path | Out-File $filename
@@ -317,9 +322,10 @@ function harden{
 		Write-Verbose -Message $string_err -verbose
 	}
 	$systemroot = "C:\Windows"
-	ftype htafile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
-	ftype WSHFile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
-	ftype batfile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
+	#FIX FTYPE find equiv for ps ?
+	cmd.exe ftype htafile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
+	cmd.exe ftype WSHFile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
+	cmd.exe ftype batfile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
 	#General OS hardening
     #Disables DNS multicast, netbios
     #Enables UAC and sets to always notify
@@ -373,7 +379,9 @@ function main{
 	scan
 	lockdown_pol
 	#positional paramter can not be found for sc start=auto
-	#Set-AppLockerPolicy
+	#ftype does not work not recognized just find substitute
+	#malware yes ddoes not work
+	#access denied AppID
 }	
 
 main
