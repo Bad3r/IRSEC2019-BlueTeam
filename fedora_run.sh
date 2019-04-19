@@ -77,7 +77,7 @@ iptables-restore < ~/backup/iptables.backup
 ##################################
 
 # reinstall binaries
-sudo apt-get update
+#sudo apt-get update
 # for ubuntu
 #sudo apt-get install -y --reinstall coreutils openssh-server net-tools build-essential libssl-dev procps lsof tmux
 # for fedora/centos
