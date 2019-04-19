@@ -242,7 +242,7 @@ function install_packages{
 	$chrome_path = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 	choco feature enable -n=allowGlobalConfirmation
 	# remove prompt
-	if([System.IO.File]::Exists($path) -eq $false){
+	if([System.IO.File]::Exists($chrome_path) -eq $false){
 		#if chrome exists don't waste time installing it again
 		choco install googlechrome -ignore-checksum
 	}
