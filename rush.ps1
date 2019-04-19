@@ -15,7 +15,7 @@ function build_wall{
 		Write-Verbose -Message "Putting old rules into rules.txt!!!!"
 		Get-NetFirewallRule | Out-File -FilePath "C:\Users\$($env:USERNAME)\Desktop\Storage\rules.txt" -NoClobber
 		Write-Verbose -Message "Restoring firewall rules to default"
-		
+		#might be worth setting up as a schedule  task
 		netsh advfirewall reset
 		netsh advfirewall set allprofiles state on
 		netsh advfirewall firewall delete rule name=all
@@ -81,7 +81,7 @@ function stop_process{
 
 function process_poker{
 	Write-Verbose -Message "Dumping current processes"
-	Get-Service | Out-File "services.txt"
+	Get-Service | Out-File "C:\Users\$($env:USERNAME)\Desktop\services.txt"
 }
 
 function change_users{
@@ -116,8 +116,18 @@ function scan{
 	Set-MpPreference -MAPSReporting Advanced
     Set-MpPreference -SubmitSamplesConsent Always
 	Set-MpPreference -ScanParameters 2 -ScanScheduleDay 0 -ScanScheduleQuickScanTime 1 -UnknownThreatDefaultAction "Quarantine" -SevereThreatDefaultAction "Quarantine" -HighThreatDefaultAction "Quarantine" -LowThreatDefaultAction "Quarantine" -ModerateThreatDefaultAction "Quarantine" -CheckForSignaturesBeforeRunningScan 1 -DisableRealtimeMonitoring 0
+	Try{
+		Add-MpPreference -AttackSurfaceReductionRules_Ids '3B576869-A4EC-4529-8536-B80A7769E899' -AttackSurfaceReductionRules_Actions Enabled
+		Add-MpPreference -AttackSurfaceReductionRules_Ids '5BEB7EFE-FD9A-4556-801D-275E5FFC04CC' -AttackSurfaceReductionRules_Actions Enabled
+		Add-MpPreference -AttackSurfaceReductionRules_Ids 'D3E037E1-3EB8-44C8-A917-57927947596D' -AttackSurfaceReductionRules_Actions Enabled
+	}
+	Catch{
+		Add-MpPreference -AttackSurfaceReductionRules_Ids '3B576869-A4EC-4529-8536-B80A7769E899' -AttackSurfaceReductionRules_Actions enable
+		Add-MpPreference -AttackSurfaceReductionRules_Ids '5BEB7EFE-FD9A-4556-801D-275E5FFC04CC' -AttackSurfaceReductionRules_Actions enable
+		Add-MpPreference -AttackSurfaceReductionRules_Ids 'D3E037E1-3EB8-44C8-A917-57927947596D' -AttackSurfaceReductionRules_Actions enable
+	}
 	(IWR -Uri "https://raw.githubusercontent.com/Bad3r/IRSEC2019-BlueTeam/master/policy.xml?token=AIVA5C4WFLR4QBWEJSB5OUC4YIU66" -UseBasicParsing).Content | Out-File policy.xml
-	New-CIPolicy -Level FilePublisher -FilePath policy.xml  -ScanPath C:\ -UserPEs -Fallback Hash
+	New-CIPolicy -Level FilePublisher -FilePath policy.xml -OmitPaths "C:\Windows\WinSxs\" -ScanPath C:\ -UserPEs -Fallback Hash
 	Try{
 		Start-MpScan -ThrottleLimit 0 -ScanType 1
 		#Write-Verbose -Message "Sleeping for 30 seconds then running full scan!"
@@ -147,27 +157,23 @@ function dump_tasks{
 }
 
 function app_lock{
-	sc config "AppIDSvc" start=auto
+	Set-Service -Name "AppIDSvc" -StartupType Automatic
 	Start-Service -Name "AppIDSvc"
-	(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml" -UseBasicParsing).Content | Out-File first.xml
-	(IWR -Uri "https://github.com/MotiBa/AppLocker/blob/master/Policies/AppLocker-Block-Publishers.xml" -UseBasicParsing).Content | Out-File second.xml
-	$deny = '<AppLockerPolicy Version="1"><RuleCollection Type="Exe, DLL, Script" EnforcementMode="NotConfigured">
-	<FilePathRule Id="31B2F340-016D-11D2-945F-00C04FB984F9" Name="%SYSTEM32%\*" Description="" 10 UserOrGroupSid="S-1-5-21-3165297888-301567370-576410423-13" 
-	Action="Deny"><Conditions><FilePathCondition Path="%SYSTEM32%\*" /></Conditions></FilePathRule></RuleCollection> 
-	</AppLockerPolicy>'
-	
-	
-	echo '<AppLockerPolicy Version="1"><RuleCollection Type="Exe, DLL, Script" EnforcementMode="NotConfigured">
-	<FilePathRule Id="31B2F340-016D-11D2-945F-00C04FB984F9" Name="%SYSTEM32%\*" Description="" 10 UserOrGroupSid="S-1-5-21-3165297888-301567370-576410423-13" 
-	Action="Allow"><Conditions><FilePathCondition Path="%SYSTEM32%\*" /></Conditions></FilePathRule></RuleCollection> 
-	</AppLockerPolicy>' | Out-File deny.xml
-	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User Everyone -Optimize -XML deny.xml | Out-File "hi1.xml"
-	Get-AppLockerFileInformation -Directory C:\Windows\system32\ -Recurse -FileType exe, dll, script | New-AppLockerPolicy -RuleType Path -User "$($env:USERNAME), Kiwi" -Optimize -XML allow.xml | Out-File "hi2.xml"
+	#make sure to start the service or all will be in vein
 	Try{
-		Set-AppLockerPolicy -XMLPolicy hi1.xml
-		Set-AppLockerPolicy -XMLPolicy hi2.xml
+		(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Paths.xml" -UseBasicParsing).Content | Out-File first.xml
+		(IWR -Uri "https://raw.githubusercontent.com/MotiBa/AppLocker/master/Policies/AppLocker-Block-Publishers.xml" -UseBasicParsing).Content | Out-File second.xml
+		Get-ChildItem C:\Windows\System32\*.exe | Get-AppLockerFileInformation | New-AppLockerPolicy -RuleType Path -User Everyone -Optimize -ServiceEnforcement Enabled -XML | Out-File deny.xml
+		Get-ChildItem C:\Windows\System32\*.exe | Get-AppLockerFileInformation | New-AppLockerPolicy -RuleType Path -User "$($env:USERNAME), Kiwi" -Optimize -ServiceEnforcement Enabled -XML  | Out-File allow.xml
+		#Add Kiwi
+		Write-Verbose -Message "Setting first.xml\n\n"
 		Set-AppLockerPolicy -XMLPolicy first.xml
-		Set-AppLockerPolicy -XMLPolicy second.xml
+		Write-Verbose -Message "Setting second.xml\n\n"
+		Set-AppLockerPolicy -XMLPolicy second.xml -User Everyone
+		Write-Verbose -Message "Setting deny.xml\n\n"
+		Set-AppLockerPolicy -XMLPolicy deny.xml 
+		Write-Verbose -Message "Setting allow.xml"
+		Set-AppLockerPolicy -XMLPolicy allow.xml 
 	}
 	Catch{
 		$string_err = $_ | Out-String
@@ -187,11 +193,15 @@ function app_lock{
 
 function install_packages{	
 	$currentuser = $env:USERNAME
+	$chrome_path = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 	choco feature enable -n=allowGlobalConfirmation
 	# remove prompt
-	choco install googlechrome
+	if([System.IO.File]::Exists($path) -eq $false){
+		#if chrome exists don't waste time installing it again
+		choco install googlechrome
+	}
 	choco install sysinternals
-	choco install eset.nod32
+	choco install malwarebytes
 	#Get-ChildItem -Path x 
 	#choco install splunk-universalforwarder
 
@@ -211,7 +221,7 @@ function fruit_user{
 }
 
 function read_history{
-   $Accounts =  Get-WmiObject -Class Win32_UserAccount -filter "LocalAccount = True"
+    $Accounts =  Get-WmiObject -Class Win32_UserAccount -filter "LocalAccount = True"
 	$ListUsers = @()
 	$currentuser = $env:USERNAME
 	$Accounts = $Accounts -split ' '
@@ -220,7 +230,7 @@ function read_history{
         $user = $stringAccount[3]
         $ListUsers += $user
 	}
-	$orig_path = C:\Users\x\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt
+	$orig_path = "C:\Users\x\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt"
 	ForEach($user in $ListUsers){
 		Try{
 			Write-Host "User: $user"
@@ -299,21 +309,37 @@ function harden{
 		$string_err = $_ | Out-String
 		Write-Verbose -Message $string_err -verbose
 	}
- 
-	
+	Try{
+			Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2Root -NoRestart
+	}
+	Catch{
+		$string_err = $_ | Out-String
+		Write-Verbose -Message $string_err -verbose
+	}
+	$systemroot = "C:\Windows"
+	ftype htafile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
+	ftype WSHFile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
+	ftype batfile="$($systemroot)\system32\NOTEPAD.EXE" "%1"
+	#General OS hardening
+    #Disables DNS multicast, netbios
+    #Enables UAC and sets to always notify
 	reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v EnableMulticast /t REG_DWORD /d 0 /f
 	reg add "HKLM\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v SMB1 /t REG_DWORD /d 0 /f
 	reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v EnableLUA /t REG_DWORD /d 1 /f
 	reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v ConsentPromptBehaviorAdmin /t REG_DWORD /d 2 /f
 	net stop WinRM
 	wmic /interactive:off nicconfig where TcpipNetbiosOptions=1 call SetTcpipNetbios 2
+	
     #Disable-WindowsOptionalFeature -Online -FeatureName smb1protocol
-    #Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2
-    Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2Root
+    #Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2	
+	#Harden lsass to help protect against credential dumping (mimikatz)
+    #Configures lsass.exe as a protected process and disabled wdigest
 	reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LSASS.exe" /v AuditLevel /t REG_DWORD /d 00000008 /f
 	reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v RunAsPPL /t REG_DWORD /d 00000001 /f
 	reg add "HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" /v UseLogonCredential /t REG_DWORD /d 0 /f
-	$systemroot = "C:\Windows"
+	
+	#Enable Windows Firewall and configure some advanced options
+	#Block Win32 binaries from making netconns when they shouldn't
 	netsh advfirewall firewall add rule name="Block Notepad.exe netconns" program="$($systemroot)\system32\notepad.exe" protocol=tcp dir=out enable=yes action=block profile=any
 	netsh advfirewall firewall add rule name="Block regsvr32.exe netconns" program="$($systemroot)\system32\regsvr32.exe" protocol=tcp dir=out enable=yes action=block profile=any
 	netsh advfirewall firewall add rule name="Block calc.exe netconns" program="$($systemroot)\system32\calc.exe" protocol=tcp dir=out enable=yes action=block profile=any
@@ -333,22 +359,23 @@ function main{
 	#[CmdletBinding()] 
 	Write-Verbose -Message "Creating directory C:\Users\$($env:USERNAME)\Desktop\Storage"
 	New-Item -Path "C:\Users\$($env:USERNAME)\Desktop" -Name "Storage" -ItemType "directory"
+	change_users
+	harden
 	#remove_junk
 	#install_chocolate
 	#install_packages
 	dump_tasks
-	change_users
 	read_history
 	process_poker
 	fruit_user
 	app_lock
 	build_wall
 	stop_scripts
-	harden
 	scan
 	lockdown_pol
-	
-}
+	#positional paramter can not be found for sc start=auto
+	#Set-AppLockerPolicy
+}	
 
 main
 
