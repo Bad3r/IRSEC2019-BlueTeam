@@ -361,9 +361,8 @@ function main{
 	New-Item -Path "C:\Users\$($env:USERNAME)\Desktop" -Name "Storage" -ItemType "directory"
 	change_users
 	harden
-	#remove_junk
-	#install_chocolate
-	#install_packages
+	install_chocolate
+	install_packages
 	dump_tasks
 	read_history
 	process_poker
