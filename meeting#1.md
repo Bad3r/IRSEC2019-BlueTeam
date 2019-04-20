@@ -49,3 +49,7 @@ Hostname | Services | OS | IP
 ------------ | ------------- | ------------ | -------------
 Troy | AD/DNS | Windows Server | 10.2.X.1
 Gebriella | Mail | Fedora | 10.2.X.2
+Chad | MSSQL | Windows Server | 10.2.X.2
+#RZeke | ICMP | Win 10 | DHCP
+Marhta | ICMP | Solaris 10 | DHCP
+Sharpay | HTTP | Ubuntu |
