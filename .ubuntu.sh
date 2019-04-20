@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/rbash
 
 if [[ $UID -ne 0 ]];then
 	echo "RUN SCRIPT AS ROOT!!!!"
