@@ -21,6 +21,7 @@ iptables-save > "/media/.backup/iptables.backup"
 
 echo "Changing user passwords..."
 # Change all users passwords
+passwd root
 cat /etc/passwd | cut -d ":" -f 1,3 | awk -F ":" '$2 > 1000 {print $1}' > ~/user
 read -p "Fuck RedTeam: " answer
 while read user;do echo "Bader/\\$answer" | passwd --stdin $user;done < ~/user
