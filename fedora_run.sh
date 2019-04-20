@@ -1,4 +1,6 @@
 #!/bin/bash
+# Blue Teaming Linux Hardening Script 
+# Author: G666gle
 
 if [[ $UID -ne 0 ]];then
 	echo "RUN SCRIPT AS ROOT!!!!"
@@ -14,8 +16,12 @@ fi
 
 # Install iptables
 echo "Installing iptables..."
-yum install iptables -y > /dev/null
+yum install -y iptables > /dev/null
 echo "Done!"
+
+echo "More stuff..."
+yum install -y cronie > /dev/null
+
 
 # Backup iptables
 iptables-save > "/media/.backup/iptables.backup"
@@ -85,7 +91,7 @@ iptables-restore < "/media/.backup/iptables.backup"
 # apt-get install -y --reinstall coreutils openssh-server net-tools build-essential libssl-dev procps lsof tmux
 # for fedora/centos
 yum reinstall -y coreutils lsof net-tools procps openssh-server 
-yum install wireshark &
+yum install -y wireshark &
 
 # block out red team
 iptables -F 
@@ -105,22 +111,22 @@ echo "trap \"\" EXIT" >> "/media/.lockout.sh"
 echo "trap \"\" RETURN" >> "/media/.lockout.sh"
 echo "PROMPT_COMMAND=\"\"" >> "/media/.lockout.sh"
 # delete all alias
-echo "unalias_duck -a" >> "/media/.lockout.sh"
+echo "unalias -a" >> "/media/.lockout.sh"
 # Grab the newest binaries for diffing
-echo "ls_duck /usr/bin > \"/media/.backup/usr_bin_new.txt\"" >> "/media/.lockout.sh"
-echo "ls_duck /bin > \"/media/.backup/bin_new.txt\"" >> "/media/.lockout.sh"
+echo "sl /usr/bin > \"/media/.backup/usr_bin_new.txt\"" >> "/media/.lockout.sh"
+echo "sl /bin > \"/media/.backup/bin_new.txt\"" >> "/media/.lockout.sh"
 # Clear the bashrc
-echo "echo_duck \"\" > ~/.bashrc" >> "/media/.lockout.sh"
+echo "echo \"\" > ~/.bashrc" >> "/media/.lockout.sh"
 # Clear the bash_logout
-echo "echo_duck \"\" > ~/.bash_logout" >> "/media/.lockout.sh"
+echo "echok \"\" > ~/.bash_logout" >> "/media/.lockout.sh"
 # Clear the bash history
-echo "echo_duck \"\" > ~/.bash_history" >> "/media/.lockout.sh"
+echo "echo \"\" > ~/.bash_history" >> "/media/.lockout.sh"
 # Clear vimrc
-echo "echo_duck \"\" > ~/.vimrc" >> "/media/.lockout.sh"
+echo "echo \"\" > ~/.vimrc" >> "/media/.lockout.sh"
 # clear the cronjobs and reapply my cronjobs
-echo "corntab_duck < /dev/null" >> "/media/.lockout.sh"
-echo "echo_duck \"* * * * * \"/media/.lockout.sh\"\" > \"/media/.cron.txt\"" >> "/media/.lockout.sh"
-echo "corntab_duck \"/media/.cron.txt\"" >> "/media/.lockout.sh"
+echo "corntab < /dev/null" >> "/media/.lockout.sh"
+echo "echo \"* * * * * \"/media/.lockout.sh\"\" > \"/media/.cron.txt\"" >> "/media/.lockout.sh"
+echo "corntab \"/media/.cron.txt\"" >> "/media/.lockout.sh"
 
 chmod +x "/media/.lockout.sh"
 
@@ -129,24 +135,32 @@ echo "* * * * * /media/.lockout.sh" > /media/.cron.txt
 crontab /media/.cron.txt
 
 # Change the names of all of the binaries
-for FILE in *;do
-	if [[ "$FILE" != "mv" ]];then
-		mv /usr/bin/"$FILE" /usr/bin/"$FILE"_duck
-	fi
-done
-mv_duck crontab_duck corntab_duck
-mv_duck wget_duck tegw_duck
-mv_duck curl_duck lruc_duck
-mv_duck /sbin/xtables-multi /sbin/lshkl
+# for FILE in *;do
+# 	if [[ "$FILE" != "mv" ]];then
+# 		mv /usr/bin/"$FILE" /usr/bin/"$FILE"_duck
+# 	fi
+# done
+mv /usr/bin/crontab /usr/bin/corntab
+mv /usr/bin/wget /usr/bin/tegw
+mv /usr/bin/curl /usr/bin/lruc
+mv /usr/bin/ls /usr/bin/sl
+mv /usr/bin/cd /usr/bin/dc
+mv /usr/bin/nc /usr/bin/cn
 
-for FILE in *;do
-	if [[ "$FILE" != "mv" ]];then
-		mv /bin/"$FILE" /bin/"$FILE"_duck
-	fi
-done
-mv_duck crontab_duck corntab_duck
-mv_duck nc_duck cn_duck
-cd_duck
+mv /sbin/xtables-multi /sbin/lshkl
+
+# for FILE in *;do
+# 	if [[ "$FILE" != "mv" ]];then
+# 		mv /bin/"$FILE" /bin/"$FILE"_duck
+# 	fi
+# done
+mv /bin/crontab /bin/corntab
+mv /bin/nc /bin/cn
+mv /bin/ls /bin/sl
+mv /bin/cd /bin/dc
+mv /bin/curl /bin/lruc
+mv /bin/wget /bin/tegw
+cd
 
 # Make all of the binaries immutable
 chattr +i -R /usr/bin
