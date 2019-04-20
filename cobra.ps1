@@ -338,7 +338,7 @@ function install_packages{
 	choco install sysinternals -ignore-checksum
 	choco install malwarebytes -ignore-checksum
 	#Get-ChildItem -Path x 
-	choco install splunk-universalforwarder
+	choco install splunk-universalforwarder -ignore-checksum
 
 	#choco install notepadplusplus
 	choco install processhacker -ignore-checksum
