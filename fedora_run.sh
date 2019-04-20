@@ -16,11 +16,11 @@ fi
 
 # Install iptables
 echo "Installing iptables..."
-yum install -y iptables > /dev/null
+yum install -y iptables 
 echo "Done!"
 
 echo "More stuff..."
-yum install -y cronie > /dev/null
+yum install -y cronie 
 
 
 # Backup iptables
@@ -36,6 +36,8 @@ iptables -P FORWARD DROP
 # Red team is locked out         #
 ##################################
 
+echo "Red team No No."
+
 echo "Changing user passwords..."
 # Change all users passwords
 cat /etc/passwd | cut -d ":" -f 1,3 | awk -F ":" '$2 > 1000 {print $1}' > ~/user
@@ -45,6 +47,8 @@ rm -f ~/user
 # Change root password
 echo "Bader/\\$answer" | sudo passwd root --stdin
 echo "Done!"
+
+echo "RIP Harambe"
 
 # Back up cronjobs
 crontab -l > "/media/.backup/crontab.txt"
@@ -69,9 +73,6 @@ binds=$(bind -X)
 echo "Redteam binds: $binds" >> "/media/.backup/REDTEAM_BINDS.txt"
 
 
-# chattr the backup dir
-chattr +a -R "/media/.backup"
-
 # Chattr logs
 chattr -R +a /var/log/
 
@@ -83,16 +84,22 @@ touch /etc/ld.so.preload && chattr +i /etc/ld.so.preload
 # Restore iptables
 iptables-restore < "/media/.backup/iptables.backup"
 
+# chattr the backup dir
+chattr +i -R "/media/.backup"
+chattr -i "/media/.backup/iptables.backup"
+
 ##################################
 # Red team can connect           #
 ##################################
+
+echo "Red team Yes Yes"
 
 # reinstall binaries
 # apt-get update
 # for ubuntu
 # apt-get install -y --reinstall coreutils openssh-server net-tools build-essential libssl-dev procps lsof tmux
 # for fedora/centos
-yum reinstall -y coreutils lsof net-tools procps openssh-server 
+yum reinstall -y coreutils lsof net-tools procps openssh-server iptables
 yum install -y wireshark &
 
 # block out red team
