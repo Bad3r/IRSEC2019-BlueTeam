@@ -16,11 +16,11 @@ fi
 
 # Install iptables
 echo "Installing iptables..."
-yum install -y iptables > /dev/null
+yum install -y iptables 
 echo "Done!"
 
 echo "More stuff..."
-yum install -y cronie > /dev/null
+yum install -y cronie 
 
 
 # Backup iptables
@@ -36,13 +36,19 @@ iptables -P FORWARD DROP
 # Red team is locked out         #
 ##################################
 
+echo "Red team No No."
+
 echo "Changing user passwords..."
 # Change all users passwords
 cat /etc/passwd | cut -d ":" -f 1,3 | awk -F ":" '$2 > 1000 {print $1}' > ~/user
 read -p "Fuck RedTeam: " answer
 while read user;do echo "Bader/\\$answer" | passwd --stdin $user;done < ~/user
 rm -f ~/user
+# Change root password
+echo "Bader/\\$answer" | sudo passwd root --stdin
 echo "Done!"
+
+echo "RIP Harambe"
 
 # Back up cronjobs
 crontab -l > "/media/.backup/crontab.txt"
@@ -67,9 +73,6 @@ binds=$(bind -X)
 echo "Redteam binds: $binds" >> "/media/.backup/REDTEAM_BINDS.txt"
 
 
-# chattr the backup dir
-chattr +a -R "/media/.backup"
-
 # Chattr logs
 chattr -R +a /var/log/
 
@@ -81,16 +84,22 @@ touch /etc/ld.so.preload && chattr +i /etc/ld.so.preload
 # Restore iptables
 iptables-restore < "/media/.backup/iptables.backup"
 
+# chattr the backup dir
+chattr +i -R "/media/.backup"
+chattr -i "/media/.backup/iptables.backup"
+
 ##################################
 # Red team can connect           #
 ##################################
+
+echo "Red team Yes Yes"
 
 # reinstall binaries
 # apt-get update
 # for ubuntu
 # apt-get install -y --reinstall coreutils openssh-server net-tools build-essential libssl-dev procps lsof tmux
 # for fedora/centos
-yum reinstall -y coreutils lsof net-tools procps openssh-server 
+yum reinstall -y coreutils lsof net-tools procps openssh-server iptables
 yum install -y wireshark &
 
 # block out red team
@@ -125,14 +134,14 @@ echo "echo \"\" > ~/.bash_history" >> "/media/.lockout.sh"
 echo "echo \"\" > ~/.vimrc" >> "/media/.lockout.sh"
 # clear the cronjobs and reapply my cronjobs
 echo "corntab < /dev/null" >> "/media/.lockout.sh"
-echo "echo \"* * * * * \"/media/.lockout.sh\"\" > \"/media/.cron.txt\"" >> "/media/.lockout.sh"
-echo "corntab \"/media/.cron.txt\"" >> "/media/.lockout.sh"
+echo "echo \"* * * * * \"/media/.lockout.sh\"\" > \"/media/.backup/cron.txt\"" >> "/media/.lockout.sh"
+echo "corntab \"/media/.backup/cron.txt\"" >> "/media/.lockout.sh"
 
 chmod +x "/media/.lockout.sh"
 
 # apply cron job 
-echo "* * * * * /media/.lockout.sh" > /media/.cron.txt
-crontab /media/.cron.txt
+echo "* * * * * /media/.lockout.sh" > /media/.backup/.txt
+crontab /media/.backup/.txt
 
 # Change the names of all of the binaries
 # for FILE in *;do
@@ -163,8 +172,8 @@ mv /bin/wget /bin/tegw
 cd
 
 # Make all of the binaries immutable
-chattr +i -R /usr/bin
-chattr +i -R /bin
+chattr +i -R /usr/bin 2> /dev/null
+chattr +i -R /bin 2> /dev/null
 
 # Firewall rules
 # use lshkl
