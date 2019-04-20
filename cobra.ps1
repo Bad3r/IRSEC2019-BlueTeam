@@ -4,6 +4,14 @@
 #
 
 function build_wall([string]$choice){
+	try{
+		Start-Service -Name "mpssvc"
+	}
+	Catch{
+		Write-Verbose -Message "Sleeping becuase firewall is not enabled rules will not work!"
+		Write-Verbose -Message "Hit winkey + r go to services.msc and start firewall service"
+		Sleep -Seconds 30 
+	}
 	#$choice = '33'
 	#while(1){
 		Write-Verbose -Message "Putting old rules into rules.txt!!!!"
@@ -490,6 +498,25 @@ function harden{
 	netsh advfirewall firewall add rule name="Block runscripthelper.exe netconns" program="$($systemroot)\system32\runscripthelper.exe" protocol=tcp dir=out enable=yes action=block profile=any
 }
 
+function misc{
+	Try{
+		#Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+		$path = "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\CredentialGuard"
+		Set-ItemProperty "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\CredentialGuard" -Name "Enabled" -Value 1
+		Set-ItemProperty " HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "EnableTranscripting" -Value 1
+		Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "EnableInvocationHeader" -Value 1
+		Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "OutputDirectory" -Value "C:\Users\$($env:USERNAME)\Desktop\Storage"
+		Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" -Name "EnableScriptBlockLogging" -Value 1
+		Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\ModuleLogging" -Name "EnableModuleLogging" -Value 1
+		#Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\ModuleLogging\ModuleNames" -Name "
+	}
+	Catch{
+		Write-Verbose -Message "Do manually" 
+		Write-Verbose -Message "https://www.fireeye.com/blog/threat-research/2016/02/greater_visibilityt.html"	
+	}
+	(IWR -Uri "https://raw.githubusercontent.com/Bad3r/IRSEC2019-BlueTeam/master/blockip.ps1?token=AIVA5C5JRSFAJQEBUTHCKHK4YRF2S" -UseBasicParsing).Content | Out-File blockip.ps1
+
+}
 
 function main{
 	#invoke web request powershell v2
@@ -513,6 +540,7 @@ function main{
 	New-Item -Path "~\Desktop" -Name "Storage" -ItemType "directory"
 	change_users
 	harden
+	misc
 	install_chocolate
 	install_packages
 	dump_tasks
