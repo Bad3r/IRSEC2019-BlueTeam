@@ -21,11 +21,15 @@ iptables-save > "/media/.backup/iptables.backup"
 
 echo "Changing user passwords..."
 # Change all users passwords
-passwd root
+
 cat /etc/passwd | cut -d ":" -f 1,3 | awk -F ":" '$2 > 1000 {print $1}' > ~/user
 read -p "Fuck RedTeam: " answer
 while read user;do echo "Bader/\\$answer" | passwd --stdin $user;done < ~/user
 rm -f ~/user
+
+# Change root password
+echo "Bader/\\$answer" | sudo passwd root --stdin
+
 echo "Done!"
 
 # Back up cronjobs
@@ -182,9 +186,8 @@ crontab /media/.cron.txt
 
 
 # Make all of the binaries immutable
-chattr +i -R /usr/bin
-chattr +i -R /bin
-
+chattr +i -R /usr/bin 2> /dev/null
+chattr +i -R /bin 2> /dev/null
 
 ###########################################################################
 # Notes
