@@ -1,94 +1,97 @@
 #!/bin/bash
 
+if [[ $UID -ne 0 ]];then
+	echo "RUN SCRIPT AS ROOT!!!!"
+	exit
+fi
+
+# Back up names of all user binarys 
+if ! [[ -d "/media/.backup" ]]; then
+	mkdir "/media/.backup"
+	ls /usr/bin > "/media/.backup/usr_bin_backup.txt"
+	ls /bin > "/media/.backup/bin_backup.txt"
+fi
+
+# Install iptables
+echo "Installing iptables..."
+yum install iptables -y > /dev/null
+echo "Done!"
+
 # Backup iptables
-iptables-save > ~/backup/iptables.backup
+iptables-save > "/media/.backup/iptables.backup"
 
 # block out red team
-sudo iptables -F 
-sudo iptables -P INPUT DROP
-sudo iptables -P OUTPUT DROP
-sudo iptables -P FORWARD DROP
+iptables -F 
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
 
 ##################################
 # Red team is locked out         #
 ##################################
 
+echo "Changing user passwords..."
 # Change all users passwords
-passwd principal
-passwd chaperone
-passwd deejay
-passwd kid_with_sweatpants
-passwd prom_king
-passwd prom_queen
-passwd dbadmin
-
-# Back up names of all user binarys 
-if ! [[ -d ~/backup ]]; then
-	mkdir ~/backup
-	ls /usr/bin > ~/backup/usr_bin_backup.txt
-	ls /bin > ~/backup/bin_backup.txt
-fi
-
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Need to hide all files make a directory that is a space
+cat /etc/passwd | cut -d ":" -f 1,3 | awk -F ":" '$2 > 1000 {print $1}' > ~/user
+read -p "Fuck RedTeam: " answer
+while read user;do echo "Bader/\\$answer" | passwd --stdin $user;done < ~/user
+rm -f ~/user
+echo "Done!"
 
 # Back up cronjobs
-crontab -l > ~/backup/crontab.txt
+crontab -l > "/media/.backup/crontab.txt"
 
 # Back up bashrc
-cat ~/.bashrc > ~/backup/bashrc.txt
+cat ~/.bashrc > "/media/.backup/bashrc.txt"
 
 # Back up bash history for IR
-cat ~/.bash_history > ~/backup/history.txt
+cat ~/.bash_history > "/media/.backup/history.txt"
 
 # Back up the bash logout
-cat ~/.bash_logout > ~/backup/logout.txt
+cat ~/.bash_logout > "/media/.backup/logout.txt"
 
 # Back up the default vimrc
-cat ~/.vimrc > ~/backup/vimrc.txt
+cat ~/.vimrc > "/media/.backup/vimrc.txt"
 
 #Back up your keybinds
-bind -p > ~/backup/mybind
+bind -p > "/media/.backup/mybind"
 # To resotre bind use: bind -f mybinds
 
 binds=$(bind -X)
-echo "Redteam binds: $binds" >> ~/backup/REDTEAM_BINDS.txt
+echo "Redteam binds: $binds" >> "/media/.backup/REDTEAM_BINDS.txt"
 
 
 # chattr the backup dir
-sudo chattr +a -R ~/backup
+chattr +a -R "/media/.backup"
 
 # Chattr logs
-sudo chattr -R +a /var/log/
-sudo chattr -R -a /var/log/apt/
-sudo chattr -a /var/log/lastlog
-sudo chattr -a /var/log/dpkg.log
+chattr -R +a /var/log/
 
 # Prevent rootkits
-#sudo env | grep -i 'LD'
-sudo mv /etc/ld.so.preload /etc/ld.so.null
-sudo touch /etc/ld.so.preload && sudo chattr +i /etc/ld.so.preload
+# sudo env | grep -i 'LD'
+mv /etc/ld.so.preload /etc/ld.so.null
+touch /etc/ld.so.preload && chattr +i /etc/ld.so.preload
 
 # Restore iptables
-iptables-restore < ~/backup/iptables.backup
+iptables-restore < "/media/.backup/iptables.backup"
 
 ##################################
 # Red team can connect           #
 ##################################
 
 # reinstall binaries
-#sudo apt-get update
+# apt-get update
 # for ubuntu
-#sudo apt-get install -y --reinstall coreutils openssh-server net-tools build-essential libssl-dev procps lsof tmux
+# apt-get install -y --reinstall coreutils openssh-server net-tools build-essential libssl-dev procps lsof tmux
 # for fedora/centos
-sudo yum reinstall -y coreutils lsof net-tools procps openssh-server make automake gcc gcc-c++ kernel-devel
-sudo yum update &
+yum reinstall -y coreutils lsof net-tools procps openssh-server 
+yum install wireshark &
 
 # block out red team
-sudo iptables -F 
-sudo iptables -P INPUT DROP
-sudo iptables -P OUTPUT DROP
-sudo iptables -P FORWARD DROP
+iptables -F 
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
 
 ##################################
 # Red team is locked out         #
@@ -97,57 +100,63 @@ sudo iptables -P FORWARD DROP
 # Create a lockout file
 
 # Disable trap
-echo "trap \"\" DEBUG" > ~/lockout.sh
-echo "trap \"\" EXIT" >> ~/lockout.sh
-echo "trap \"\" RETURN" >> ~/lockout.sh
-echo "PROMPT_COMMAND=\"\"" >> ~/lockout.sh
+echo "trap \"\" DEBUG" > "/media/.lockout.sh"
+echo "trap \"\" EXIT" >> "/media/.lockout.sh"
+echo "trap \"\" RETURN" >> "/media/.lockout.sh"
+echo "PROMPT_COMMAND=\"\"" >> "/media/.lockout.sh"
 # delete all alias
-echo "unalias_duck -a" >> ~/lockout.sh
+echo "unalias_duck -a" >> "/media/.lockout.sh"
 # Grab the newest binaries for diffing
-echo "ls_duck /usr/bin > ~/backup/usr_bin_new.txt" >> ~/lockout.sh
-echo "ls_duck /bin > ~/backup/bin_new.txt" >> ~/lockout.sh
+echo "ls_duck /usr/bin > \"/media/.backup/usr_bin_new.txt\"" >> "/media/.lockout.sh"
+echo "ls_duck /bin > \"/media/.backup/bin_new.txt\"" >> "/media/.lockout.sh"
 # Clear the bashrc
-echo "echo_duck \"\" > ~/.bashrc" >> ~/lockout.sh
+echo "echo_duck \"\" > ~/.bashrc" >> "/media/.lockout.sh"
 # Clear the bash_logout
-echo "echo_duck \"\" > ~/.bash_logout" >> ~/lockout.sh
+echo "echo_duck \"\" > ~/.bash_logout" >> "/media/.lockout.sh"
 # Clear the bash history
-echo "echo_duck \"\" > ~/.bash_history" >> ~/lockout.sh
+echo "echo_duck \"\" > ~/.bash_history" >> "/media/.lockout.sh"
 # Clear vimrc
-echo "echo_duck \"\" > ~/.vimrc" >> ~/lockout.sh
+echo "echo_duck \"\" > ~/.vimrc" >> "/media/.lockout.sh"
 # clear the cronjobs and reapply my cronjobs
-echo "corntab_duck < /dev/null" >> ~/lockout.sh
-echo "echo_duck \"* * * * * ~/lockout.sh\" > ~/cron.txt" >> ~/lockout.sh
-ehco "corntab_duck ~/cron.txt" >> ~/lockout.sh
+echo "corntab_duck < /dev/null" >> "/media/.lockout.sh"
+echo "echo_duck \"* * * * * \"/media/.lockout.sh\"\" > \"/media/.cron.txt\"" >> "/media/.lockout.sh"
+echo "corntab_duck \"/media/.cron.txt\"" >> "/media/.lockout.sh"
 
-sudo chmod +x ~/lockout.sh
+chmod +x "/media/.lockout.sh"
 
 # apply cron job 
-echo "* * * * * ~/lockout.sh" > ~/cron.txt
-crontab ~/cron.txt
+echo "* * * * * /media/.lockout.sh" > /media/.cron.txt
+crontab /media/.cron.txt
 
 # Change the names of all of the binaries
-cd /usr/bin
-for FILENAME in *;do mv $FILENAME $FILENAME_duck;done
+for FILE in *;do
+	if [[ "$FILE" != "mv" ]];then
+		mv /usr/bin/"$FILE" /usr/bin/"$FILE"_duck
+	fi
+done
 mv_duck crontab_duck corntab_duck
 mv_duck wget_duck tegw_duck
 mv_duck curl_duck lruc_duck
 mv_duck /sbin/xtables-multi /sbin/lshkl
 
-cd_duck /bin
-for FILENAME in *;do mv $FILENAME $FILENAME_duck;done
+for FILE in *;do
+	if [[ "$FILE" != "mv" ]];then
+		mv /bin/"$FILE" /bin/"$FILE"_duck
+	fi
+done
 mv_duck crontab_duck corntab_duck
 mv_duck nc_duck cn_duck
 cd_duck
 
 # Make all of the binaries immutable
-sudo chattr +i -R /usr/bin
-sudo chattr +i -R /bin
+chattr +i -R /usr/bin
+chattr +i -R /bin
 
 # Firewall rules
 # use lshkl
 
 # Restore iptables
-iptables-restore < ~/backup/iptables.backup
+iptables-restore < /media/.backup/iptables.backup
 
 ##################################
 # Red team can connect           #
@@ -173,4 +182,9 @@ iptables-restore < ~/backup/iptables.backup
 #salt the passwords
 
 #prevent red team from looking at most recently viewed files
-#go through all the users and change password
+#check sbin/nologin 
+
+# progression
+# status
+# conf file
+# edit binary
