@@ -5,12 +5,12 @@
 
 function build_wall([string]$choice){
 	try{
-		Start-Service -Name "mpssvc"
+		Start-Service -Name "Mpsvc"
 	}
 	Catch{
 		Write-Verbose -Message "Sleeping becuase firewall is not enabled rules will not work!"
 		Write-Verbose -Message "Hit winkey + r go to services.msc and start firewall service"
-		Sleep -Seconds 30 
+		#Sleep -Seconds 30 
 	}
 	#$choice = '33'
 	#while(1){
@@ -346,7 +346,7 @@ function install_packages{
 	choco install sysinternals -ignore-checksum
 	choco install malwarebytes -ignore-checksum
 	#Get-ChildItem -Path x 
-	choco install splunk-universalforwarder -ignore-checksum
+	choco install splunk-universalforwarder
 
 	#choco install notepadplusplus
 	choco install processhacker -ignore-checksum
@@ -501,13 +501,13 @@ function harden{
 function misc{
 	Try{
 		#Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
-		$path = "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\CredentialGuard"
-		Set-ItemProperty "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\CredentialGuard" -Name "Enabled" -Value 1
-		Set-ItemProperty " HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "EnableTranscripting" -Value 1
-		Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "EnableInvocationHeader" -Value 1
-		Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "OutputDirectory" -Value "C:\Users\$($env:USERNAME)\Desktop\Storage"
-		Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" -Name "EnableScriptBlockLogging" -Value 1
-		Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\ModuleLogging" -Name "EnableModuleLogging" -Value 1
+		$path = "HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\CredentialGuard"
+		Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\CredentialGuard" -Name "Enabled" -Value 1
+		Set-ItemProperty " HKLM:\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "EnableTranscripting" -Value 1
+		Set-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "EnableInvocationHeader" -Value 1
+		Set-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\Transcription" -Name "OutputDirectory" -Value "C:\Users\$($env:USERNAME)\Desktop\Storage"
+		Set-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" -Name "EnableScriptBlockLogging" -Value 1
+		Set-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\ModuleLogging" -Name "EnableModuleLogging" -Value 1
 		#Set-ItemProperty "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\PowerShell\ModuleLogging\ModuleNames" -Name "
 	}
 	Catch{
