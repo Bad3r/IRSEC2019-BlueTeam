@@ -1,0 +1,26 @@
+IPv6
+1. To disable:
+a. System -&gt; Advanced -&gt; Network -&gt; Uncheck allow IPv6
+
+
+Setting Up NAT for Services
+1. Create Virtual IP
+a. Firewall -&gt; Virtual IPs -&gt; Type = IP Alias
+i. Enter the external address (and set the subnet mask to
+the subnet mask of the external interface → /24
+usually
+
+2. Firewall -&gt; 1:1 -&gt; Add new
+a. Interface = WAN
+b. External Subnet IP = IP of the IP alias you just created
+c. Internal IP = (internal IP)
+
+Random Stuff
+1. pfSense constantly pings its default gateway to monitor its
+uptime - you can disable this in System -&gt; Routing -&gt; Edit
+default GW -&gt; check “Disable Gateway Monitoring”
+● When installing, make sure you have an internet connection,
+otherwise it will take a long time to boot because it won’t be
+able to find an NTP server (tries to on boot by default)
+● When installing, ONLY ADD ONE ethernet interface - add the second
+interface after the OS is installed

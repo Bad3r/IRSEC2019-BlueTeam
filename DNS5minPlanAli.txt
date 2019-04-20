@@ -1,16 +1,23 @@
-
 # 1.  Change passwords
 passwd "IceCups-RIT321"
 # 2.	Audit sudoers and change passwords
+cat /etc/sudoers | egrep -v '^#.*'
+lsof | grep -i -E 'raw|pcap'
+
 #look for any other (ALL:ALL) except you and git rid of it
 # 3.	Secure Logs
 chattr +a +i /var/log/*
 chattr -R +I myfolder/
+#3.5
+adduser <username>
+usermod -G wheel <username>
+passwd <username>
+
 #4.	Backup
     - getent passwd > users.orig
     - getent group > group.orig
-    - tar -czvpf etcbackup.tar.gz /etc &
-    - tar -czvpf homebak.tar.gz /home &
+    - tar -czvpf etc_backup.tar.gz /etc &
+    - tar -czvpf home_back.tar.gz /home &
 #5.	Backup BIND
 	- tar -czvpf bindbak.tar.gz /etc/bind &
 #6.	Backup mysql
@@ -149,8 +156,8 @@ iptables -t mangle -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 # ICMP
 iptables -t mangle -A INPUT -p icmp -j ACCEPT
 # mysql
-iptables -t mangle -A INPUT -p tcp -s ___web___ --dport 3306 -j ACCEPT
-iptables -t mangle -A INPUT -p tcp -s ___mail___ --dport 3306 -j ACCEPT
+iptables -t mangle -A INPUT -p tcp -s ___web_IP__ --dport 3306 -j ACCEPT
+iptables -t mangle -A INPUT -p tcp -s ___mail_IP__ --dport 3306 -j ACCEPT
 # MASTER/SECONDARY: Allow to get queried
 iptables -t mangle -A INPUT -p udp --dport 53 -j ACCEPT
 # SECONDARY: Allow to receive the transfer
@@ -158,9 +165,9 @@ Iptables -t mangle -A INPUT -p tcp --sport 53 -j ACCEPT
 # SECONDARY: Allow to ask for a transfer
 Iptables -t mangle -A OUTPUT -p tcp –dport 53 -j ACCEPT
 # CLIENT: Allow to dig
-Iptables -t mangle -A OUTPUT -p udp –dport 53 -j ACCEPT
+iptables -t mangle -A OUTPUT -p udp –dport 53 -j ACCEPT
 # CLIENT: Allow to receive dig info
-Iptables -t mangle -A INPUT -p udp –sport 53 -j ACCEPT
+iptables -t mangle -A INPUT -p udp –sport 53 -j ACCEPT
 # Drop all else
 iptables -t mangle -A INPUT -j DROP
 iptables -t mangle -A OUTPUT -j DROP
@@ -172,5 +179,19 @@ Iptables -t mangle -I OUTPUT 1 -p tcp –dport 80,443 -j ACCEPT
 Iptables -t mangle -I INPUT 1 -p tcp –sport 80,443 -m state –state ESTABLISHED,RELATED -j ACCEPT
 
 ./allow.sh; yum install <packege>; ./tables.sh
+
+
+
+
+
+
+#Audit SSH
+PermitRootLogin no
+RSAAuthentication no
+PubkeyAuthentication no
+IgnoreRhosts yes
+X11Forwarding no
+UseLogin yes
+
 
 
