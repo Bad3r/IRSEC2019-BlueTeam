@@ -143,7 +143,6 @@ iptables -A OUTPUT -j DROP
 ##################################
 # Red team is locked out         #
 ##################################
-
 # Create a lockout file
 
 # Disable trap
@@ -152,39 +151,35 @@ echo "trap \"\" EXIT" >> "/media/.lockout.sh"
 echo "trap \"\" RETURN" >> "/media/.lockout.sh"
 echo "PROMPT_COMMAND=\"\"" >> "/media/.lockout.sh"
 # delete all alias
-echo "unalias_duck -a" >> "/media/.lockout.sh"
+echo "unalias -a" >> "/media/.lockout.sh"
 # Grab the newest binaries for diffing
-echo "ls_duck /usr/bin > \"/media/.backup/usr_bin_new.txt\"" >> "/media/.lockout.sh"
-echo "ls_duck /bin > \"/media/.backup/bin_new.txt\"" >> "/media/.lockout.sh"
+echo "sl /usr/bin > \"/media/.backup/usr_bin_new.txt\"" >> "/media/.lockout.sh"
+echo "sl /bin > \"/media/.backup/bin_new.txt\"" >> "/media/.lockout.sh"
 # Clear the bashrc
-echo "echo_duck \"\" > ~/.bashrc" >> "/media/.lockout.sh"
+echo "echo \"\" > ~/.bashrc" >> "/media/.lockout.sh"
 # Clear the bash_logout
-echo "echo_duck \"\" > ~/.bash_logout" >> "/media/.lockout.sh"
+echo "echok \"\" > ~/.bash_logout" >> "/media/.lockout.sh"
 # Clear the bash history
-echo "echo_duck \"\" > ~/.bash_history" >> "/media/.lockout.sh"
+echo "echo \"\" > ~/.bash_history" >> "/media/.lockout.sh"
 # Clear vimrc
-echo "echo_duck \"\" > ~/.vimrc" >> "/media/.lockout.sh"
+echo "echo \"\" > ~/.vimrc" >> "/media/.lockout.sh"
 # clear the cronjobs and reapply my cronjobs
-echo "corntab_duck < /dev/null" >> "/media/.lockout.sh"
-echo "echo_duck \"* * * * * \"/media/.lockout.sh\"\" > \"/media/.cron.txt\"" >> "/media/.lockout.sh"
-echo "corntab_duck \"/media/.cron.txt\"" >> "/media/.lockout.sh"
+echo "corntab < /dev/null" >> "/media/.lockout.sh"
+echo "echo \"* * * * * \"/media/.lockout.sh\"\" > \"/media/.cron.txt\"" >> "/media/.lockout.sh"
+echo "corntab \"/media/.cron.txt\"" >> "/media/.lockout.sh"
 
 chmod +x "/media/.lockout.sh"
 
 # apply cron job
 echo "* * * * * /media/.lockout.sh" > /media/.cron.txt
 crontab /media/.cron.txt
+chmod +x "/media/.lockout.sh"
 
-# Change the names of all of the binaries
-for FILE in *;do
-	if [[ "$FILE" != "mv" ]];then
-		mv /usr/bin/"$FILE" /usr/bin/"$FILE"_duck
-	fi
-done
-mv_duck crontab_duck corntab_duck
-mv_duck wget_duck tegw_duck
-mv_duck curl_duck lruc_duck
-mv_duck /sbin/xtables-multi /sbin/lshkl
+# apply cron job
+echo "* * * * * /media/.lockout.sh" > /media/.cron.txt
+crontab /media/.cron.txt
+
+
 
 for FILE in *;do
 	if [[ "$FILE" != "mv" ]];then
