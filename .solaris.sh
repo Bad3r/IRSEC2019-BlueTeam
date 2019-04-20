@@ -13,7 +13,8 @@ read -p "Fuck RedTeam: " answer
 while read user;do echo "Bader/\\$answer" | passwd --stdin $user;done < ~/user
 rm -f ~/user
 echo "Done!"
-echo "checking..."
+
+echo "checking... for csw"
 CSW=/opt/csw
 BAD=$HOME/badstuff
 SSH=/etc/ssh
