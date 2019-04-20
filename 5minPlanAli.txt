@@ -1,0 +1,176 @@
+
+# 1.  Change passwords
+passwd "IceCups-RIT321"
+# 2.	Audit sudoers and change passwords
+#look for any other (ALL:ALL) except you and git rid of it
+# 3.	Secure Logs
+chattr +a +i /var/log/*
+chattr -R +I myfolder/
+#4.	Backup
+    - getent passwd > users.orig
+    - getent group > group.orig
+    - tar -czvpf etcbackup.tar.gz /etc &
+    - tar -czvpf homebak.tar.gz /home &
+#5.	Backup BIND
+	- tar -czvpf bindbak.tar.gz /etc/bind &
+#6.	Backup mysql
+	- mysqldump -A -u root -p > zabbix.sql
+# 7.	Turn off services
+# a.	Web
+# i.	Remove apache2
+# b.	SSH
+	- /etc/init.d/sshd stop
+#c.	VNC
+	- /etc/init.d/vnc stop
+#d.	Telnet
+	- /etc/init.d/telnetd stop
+#e.	Cron
+    - /etc/init.d/cron stop
+#8.	IP tables
+#9.	Add and use a new user
+#a.	/usr/sbin/useradd <ali12>
+#b.	passwd <securePassword>
+#10.	Mysql
+#a.	Change password
+#b.	CREATE USER 'newuser'@'theirIP||localhost' IDENTIFIED BY 'password';
+#c.	GRANT ALL PRIVILEGES ON * . * TO 'newuser'@'theirIP||localhost';
+#d.	FLUSH PRIVILEGES;
+#11.	Backup outputs
+#a.	Netstat -tunalp > netstat.orig
+#b.	Ps -aux > ps.orig
+#c.	Bash History > hist.orig
+#d.	Vim info > vim.orig
+#e.	Alias > alias.orig
+#12.	BIND
+#a.	DNS Security
+#i.	Allow-query { any;}
+#ii.	Allow-update {none;}
+#iii.	Allow-transfer {none;}
+#iv.	Listen-on-v6 {none;}
+#13.	Backup fixed files
+#14.	Investigate
+# 15.	Install
+# a.	Fix packages
+# i.	Backup original sources.list
+# ii.	sudo sed -i –re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+# iii.	apt-get update
+# iv.	apt-get install update-manager-core
+# v.	do-release-upgrade
+# b.	Nmap
+# i.	Try apt-get install nmap first
+# ii.	Wget http://nmap.org/dist/nmap-6.40.tar.bz2
+# iii.	cd nmap
+# iv.	./configure
+# v.	Make
+# vi.	Make install
+# c.	Vim
+# d.	Squid3
+# e.	Tmux
+# 16.	NMAP scan
+
+
+
+
+Split DNS
+named.conf:
+include "/etc/bind/named.conf.options";
+
+acl private {
+    #192.168.200.131;
+    #private ip
+    localhost;
+};
+
+view "internal" {
+    match-clients {private;};
+
+        zone "internal.teamX.com" {
+            type master;
+            file "/etc/bind/zones/internal/db.internal.teamX.com";
+        };
+
+        zone "168.192.in-addr.arpa" {
+            type master;
+            file "/etc/bind/zones/internal/db.192.168";
+        };
+        zone "." {
+            type hint;
+            file "/etc/bind/db.root";
+        };
+
+        zone "localhost" {
+            type master;
+            file "/etc/bind/db.local";
+        };
+
+        zone "127.in-addr.arpa" {
+            type master;
+            file "/etc/bind/db.127";
+        };
+
+        zone "0.in-addr.arpa" {
+            type master;
+            file "/etc/bind/db.0";
+        };
+
+        zone "255.in-addr.arpa" {
+            type master;
+            file "/etc/bind/db.255";
+        };
+};
+view "external" {
+    match-clients {any;};
+    recursion no;
+        zone "teamX.com" {
+            type master;
+            file "/etc/bind/zones/db.teamx.com";
+        };
+};
+
+
+
+
+#!/bin/bash
+# flush ipv6
+Ip6tables -t mangle -F
+Ip6tables -t mangle -X
+Ip6tables -t mangle -A INPUT -j DROP
+Ip6tables -t mangle -A OUTPUT -j  DROP
+# flush ipv4
+Iptables -t mangle -F
+Iptables -t mangle -X
+# default
+Iptables -t mangle -P INPUT DROP
+Iptables -t mangle -P OUTPUT DROP
+# loopback
+iptables -t mangle -A INPUT -i lo -j ACCEPT
+# The rule matches all traffic originating at the local host no matter which destination.
+iptables -t mangle -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+# ICMP
+iptables -t mangle -A INPUT -p icmp -j ACCEPT
+# mysql
+iptables -t mangle -A INPUT -p tcp -s ___web___ --dport 3306 -j ACCEPT
+iptables -t mangle -A INPUT -p tcp -s ___mail___ --dport 3306 -j ACCEPT
+# MASTER/SECONDARY: Allow to get queried
+iptables -t mangle -A INPUT -p udp --dport 53 -j ACCEPT
+# SECONDARY: Allow to receive the transfer
+Iptables -t mangle -A INPUT -p tcp --sport 53 -j ACCEPT
+# SECONDARY: Allow to ask for a transfer
+Iptables -t mangle -A OUTPUT -p tcp –dport 53 -j ACCEPT
+# CLIENT: Allow to dig
+Iptables -t mangle -A OUTPUT -p udp –dport 53 -j ACCEPT
+# CLIENT: Allow to receive dig info
+Iptables -t mangle -A INPUT -p udp –sport 53 -j ACCEPT
+# Drop all else
+iptables -t mangle -A INPUT -j DROP
+iptables -t mangle -A OUTPUT -j DROP
+
+
+allow.sh
+#!/bin/bash
+Iptables -t mangle -I OUTPUT 1 -p tcp –dport 80,443 -j ACCEPT
+Iptables -t mangle -I INPUT 1 -p tcp –sport 80,443 -m state –state ESTABLISHED,RELATED -j ACCEPT
+
+./allow.sh; yum install <packege>; ./tables.sh
+
+
