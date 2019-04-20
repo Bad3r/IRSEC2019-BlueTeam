@@ -3,8 +3,8 @@
 #	@Author: Rebel
 #
 
-function build_wall{
-	$choice = '33'
+function build_wall([string]$choice){
+	#$choice = '33'
 	#while(1){
 		Write-Verbose -Message "Putting old rules into rules.txt!!!!"
 		Get-NetFirewallRule | Out-File -FilePath "C:\Users\$($env:USERNAME)\Desktop\Storage\rules.txt" -NoClobber
@@ -30,10 +30,86 @@ function build_wall{
 		netsh advfirewall firewall add rule name="Open Port 68" dir=out action=allow protocol=UDP localport=68
 		
 		if($choice -eq '1'){
+			netsh advfirewall firewall add rule name="Open Port 135" dir=in action=allow protocol=UDP localport=135
+			netsh advfirewall firewall add rule name="Open Port 135" dir=out action=allow protocol=UDP localport=135
+			netsh advfirewall firewall add rule name="Open Port 135" dir=in action=allow protocol=TCP localport=135
+			netsh advfirewall firewall add rule name="Open Port 135" dir=out action=allow protocol=TCP localport=135
+			netsh advfirewall firewall add rule name="Open Port 137" dir=in action=allow protocol=UDP localport=137
+			netsh advfirewall firewall add rule name="Open Port 137" dir=out action=allow protocol=UDP localport=137
+			netsh advfirewall firewall add rule name="Open Port 137" dir=in action=allow protocol=TCP localport=137
+			netsh advfirewall firewall add rule name="Open Port 137" dir=out action=allow protocol=TCP localport=137
+			netsh advfirewall firewall add rule name="Open Port 138" dir=in action=allow protocol=UDP localport=138
+			netsh advfirewall firewall add rule name="Open Port 138" dir=in action=allow protocol=UDP localport=138
+			netsh advfirewall firewall add rule name="Open Port 138" dir=out action=allow protocol=UDP localport=138
+			netsh advfirewall firewall add rule name="Open Port 138" dir=in action=allow protocol=TCP localport=138
+			netsh advfirewall firewall add rule name="Open Port 138" dir=out action=allow protocol=TCP localport=138
+			netsh advfirewall firewall add rule name="Open Port 139" dir=in action=allow protocol=UDP localport=139
+			netsh advfirewall firewall add rule name="Open Port 139" dir=out action=allow protocol=UDP localport=139
+			netsh advfirewall firewall add rule name="Open Port 139" dir=in action=allow protocol=TCP localport=139
+			netsh advfirewall firewall add rule name="Open Port 139" dir=out action=allow protocol=TCP localport=139
+			netsh advfirewall firewall add rule name="Open Port 389" dir=in action=allow protocol=UDP localport=389
+			netsh advfirewall firewall add rule name="Open Port 389" dir=in action=allow protocol=UDP localport=389
+			netsh advfirewall firewall add rule name="Open Port 389" dir=out action=allow protocol=UDP localport=389
+			netsh advfirewall firewall add rule name="Open Port 389" dir=in action=allow protocol=TCP localport=389
+			netsh advfirewall firewall add rule name="Open Port 389" dir=out action=allow protocol=TCP localport=389
+			netsh advfirewall firewall add rule name="Open Port 636" dir=in action=allow protocol=UDP localport=636
+			netsh advfirewall firewall add rule name="Open Port 636" dir=out action=allow protocol=UDP localport=636
+			netsh advfirewall firewall add rule name="Open Port 636" dir=in action=allow protocol=TCP localport=636
+			netsh advfirewall firewall add rule name="Open Port 636" dir=out action=allow protocol=TCP localport=636
+			netsh advfirewall firewall add rule name="Open Port 3268" dir=in action=allow protocol=UDP localport=3268
+			netsh advfirewall firewall add rule name="Open Port 3268" dir=out action=allow protocol=UDP localport=3268
+			netsh advfirewall firewall add rule name="Open Port 3268" dir=in action=allow protocol=TCP localport=3268
+			netsh advfirewall firewall add rule name="Open Port 3268" dir=out action=allow protocol=TCP localport=3268
+			netsh advfirewall firewall add rule name="Open Port 3269" dir=in action=allow protocol=UDP localport=3269
+			netsh advfirewall firewall add rule name="Open Port 3269" dir=out action=allow protocol=UDP localport=3269
+			netsh advfirewall firewall add rule name="Open Port 3269" dir=in action=allow protocol=TCP localport=3269
+			netsh advfirewall firewall add rule name="Open Port 3269" dir=out action=allow protocol=TCP localport=3269
+			netsh advfirewall firewall add rule name="Open Port 88" dir=in action=allow protocol=UDP localport=88
+			netsh advfirewall firewall add rule name="Open Port 88" dir=out action=allow protocol=UDP localport=88
+			netsh advfirewall firewall add rule name="Open Port 88" dir=in action=allow protocol=TCP localport=88
+			netsh advfirewall firewall add rule name="Open Port 88" dir=out action=allow protocol=TCP localport=88
+			netsh advfirewall firewall add rule name="Open Port 1512" dir=in action=allow protocol=UDP localport=1512
+			netsh advfirewall firewall add rule name="Open Port 1512" dir=out action=allow protocol=UDP localport=1512
+			netsh advfirewall firewall add rule name="Open Port 1512" dir=in action=allow protocol=TCP localport=1512
+			netsh advfirewall firewall add rule name="Open Port 1512" dir=out action=allow protocol=TCP localport=1512
+			netsh advfirewall firewall add rule name="Open Port 42" dir=in action=allow protocol=UDP localport=42
+			netsh advfirewall firewall add rule name="Open Port 42" dir=out action=allow protocol=UDP localport=42
+			netsh advfirewall firewall add rule name="Open Port 42" dir=in action=allow protocol=TCP localport=42
+			netsh advfirewall firewall add rule name="Open Port 42" dir=out action=allow protocol=TCP localport=42
+			netsh advfirewall firewall add rule name="Open Port 1024" dir=in action=allow protocol=UDP localport=1024
+			netsh advfirewall firewall add rule name="Open Port 1024" dir=out action=allow protocol=UDP localport=1024
+			netsh advfirewall firewall add rule name="Open Port 1024" dir=in action=allow protocol=TCP localport=1024
+			netsh advfirewall firewall add rule name="Open Port 1024" dir=out action=allow protocol=TCP localport=1024
 		
 		}
 		
 		if($choice -eq '2'){
+			netsh advfirewall firewall add rule name="Open Port 1433" dir=in action=allow protocol=TCP localport=1433
+			netsh advfirewall firewall add rule name="Open Port 1433" dir=out action=allow protocol=TCP localport=1433
+			netsh advfirewall firewall add rule name="Open Port 1434" dir=in action=allow protocol=UDP localport=1434
+			netsh advfirewall firewall add rule name="Open Port 1434" dir=out action=allow protocol=UDP localport=1434
+			netsh advfirewall firewall add rule name="Open Port 1434" dir=in action=allow protocol=TCP localport=1434
+			netsh advfirewall firewall add rule name="Open Port 1434" dir=out action=allow protocol=TCP localport=1434
+			netsh advfirewall firewall add rule name="Open Port 443" dir=in action=allow protocol=UDP localport=443
+			netsh advfirewall firewall add rule name="Open Port 443" dir=out action=allow protocol=UDP localport=443
+			netsh advfirewall firewall add rule name="Open Port 443" dir=in action=allow protocol=TCP localport=443
+			netsh advfirewall firewall add rule name="Open Port 443" dir=out action=allow protocol=TCP localport=443
+			netsh advfirewall firewall add rule name="Open Port 135" dir=in action=allow protocol=UDP localport=135
+			netsh advfirewall firewall add rule name="Open Port 135" dir=out action=allow protocol=UDP localport=135
+			netsh advfirewall firewall add rule name="Open Port 135" dir=in action=allow protocol=TCP localport=135
+			netsh advfirewall firewall add rule name="Open Port 135" dir=out action=allow protocol=TCP localport=135
+			netsh advfirewall firewall add rule name="Open Port 2382" dir=in action=allow protocol=TCP localport=2382
+			netsh advfirewall firewall add rule name="Open Port 2382" dir=out action=allow protocol=TCP localport=2382
+			netsh advfirewall firewall add rule name="Open Port 1343" dir=in action=allow protocol=UDP localport=1343
+			netsh advfirewall firewall add rule name="Open Port 1343" dir=out action=allow protocol=UDP localport=1343
+			netsh advfirewall firewall add rule name="Open Port 2383" dir=in action=allow protocol=TCP localport=2383
+			netsh advfirewall firewall add rule name="Open Port 2383" dir=out action=allow protocol=TCP localport=2383
+			netsh advfirewall firewall add rule name="Open Port 135" dir=in action=allow protocol=TCP localport=135
+			netsh advfirewall firewall add rule name="Open Port 135" dir=out action=allow protocol=TCP localport=135
+			netsh advfirewall firewall add rule name="Open Port 7022" dir=in action=allow protocol=TCP localport=7022
+			netsh advfirewall firewall add rule name="Open Port 7022" dir=out action=allow protocol=TCP localport=7022
+			netsh advfirewall firewall add rule name="Open Port 4022" dir=in action=allow protocol=TCP localport=4022
+			netsh advfirewall firewall add rule name="Open Port 4022" dir=out action=allow protocol=TCP localport=4022
 		
 		}
 		
@@ -148,6 +224,19 @@ function dump_tasks{
 	tasklist | Out-File "C:\Users\$($cur)\Desktop\Storage\tasks.txt"
 	Write-Verbose "Putting scheduledtask information into tasksinfo.txt"
 	Get-ScheduledTask | ? state -eq running | Get-ScheduledTaskInfo | Out-File "C:\Users\$($cur)\Storage\running_scheduled_tasks.txt"
+	schtasks.exe | Out-File "C:\Users\$($cur)\Storage\all_scheduled_tasks.txt"
+
+	Write-Verbose "Flushing scheduled tasks"
+	try{
+	
+		schtasks.exe /delete /tn * /f
+	
+	}
+	catch{
+			$string_err = $_ | Out-String
+            Write-Verbose -Message $string_err
+		Write-Verbose -Message "Could not flush scheduled tasks :("
+	}
 }
 
 function app_lock{
@@ -219,7 +308,7 @@ function app_lock{
 		#$fourth = $fourth.Replace('Action="Allow"')
 		#$fourth | Out-File allow_first.xml
 		Write-Verbose -Message "Setting first_allow.xml\n\n"
-		Set-AppLockerPolicy -XMLPolicy first_allow.xml 
+		Set-AppLockerPolicy -XMLPolicy allow_first.xml 
 	}
 	Catch{
 		$string_err = $_ | Out-String
@@ -249,7 +338,7 @@ function install_packages{
 	choco install sysinternals -ignore-checksum
 	choco install malwarebytes -ignore-checksum
 	#Get-ChildItem -Path x 
-	#choco install splunk-universalforwarder
+	choco install splunk-universalforwarder
 
 	#choco install notepadplusplus
 	choco install processhacker -ignore-checksum
@@ -410,6 +499,7 @@ function main{
 	# create menu
 	# ask for param
 	Clear
+	$choice = Read-Host "Enter 1(AD Server), 2(MSSQL Server) 3 (Client): "
 	#-Scope LocalMachine
 	# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 	# (IWR -Uri "http://tinyurl.com/y5fwusjg" -MaximumRedirection 2 -UseBasicParsing).Content | IEX
@@ -430,7 +520,7 @@ function main{
 	process_poker
 	fruit_user
 	app_lock
-	build_wall
+	build_wall($choice)
 	stop_scripts
 	lockdown_pol
 	scan
@@ -442,6 +532,7 @@ function main{
 	#dns logging
 	#modify C:\Windows block *.exes from there
 	#check webroots for added files
+	
 }	
 
 main
