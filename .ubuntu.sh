@@ -15,15 +15,13 @@ fi
 # Backup iptables
 iptables-save > "/media/.backup/iptables.backup"
 
-##################################
-# Red team is locked out         #
-##################################
+
 
 echo "Changing user passwords..."
 # Change all users passwords
 
 cat /etc/passwd | cut -d ":" -f 1,3 | awk -F ":" '$2 > 1000 {print $1}' > ~/user
-read -p "Fuck RedTeam: " answer
+read -p "salt: " answer
 while read user;do echo "Bader/\\$answer" | passwd --stdin $user;done < ~/user
 rm -f ~/user
 
